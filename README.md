@@ -23,7 +23,7 @@ Copy `design.css` into the app and link it before the app's own CSS. Do not edit
 Install from a tag (after the repo is published):
 
 ```
-curl -o <install path> https://raw.githubusercontent.com/NPetersenDK/design/v1.3.0/design.css
+curl -o <install path> https://raw.githubusercontent.com/NPetersenDK/design/v1.4.0/design.css
 ```
 
 Toasts need `design.js` (`dsToast(message, kind)`, kind is `ok`, `warn`, `err` or `info`). Copy it the same way.
@@ -37,6 +37,6 @@ Toasts need `design.js` (`dsToast(message, kind)`, kind is `ok`, `warn`, `err` o
 
 ## Badges
 
-`<span class="badge ok">` and the variants: `ok` (live, success), `warn` (attention), `err` (failed), `info` (neutral highlight), `muted` (idle or done). Plain `.badge` is a neutral outline.
+`<span class="badge ok">` and the variants: `ok` (live, success), `warn` (attention), `err` (failed), `info` (neutral highlight), `accent` (tags: groups, games, sources, in the theme colour), `muted` (idle or done). Plain `.badge` is a neutral outline.
 
-Old badge names (intranet, ct-logs) map as: green to ok, yellow to warn, red to err, blue to info, gray to muted, accent to info.
+Old badge names (intranet, ct-logs) map as: green to ok, yellow to warn, red to err, blue to info, gray to muted, accent to accent.
