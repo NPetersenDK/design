@@ -23,7 +23,7 @@ Copy `design.css` into the app and link it before the app's own CSS. Do not edit
 Install from a tag (after the repo is published):
 
 ```
-curl -o <install path> https://raw.githubusercontent.com/NPetersenDK/design/v1.0.0/design.css
+curl -o <install path> https://raw.githubusercontent.com/NPetersenDK/design/v1.2.0/design.css
 ```
 
 Toasts need `design.js` (`dsToast(message, kind)`, kind is `ok`, `warn`, `err` or `info`). Copy it the same way.

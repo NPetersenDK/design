@@ -24,7 +24,7 @@
 
 <div class="g-bar">
   <div class="row wrap">
-    <strong>Design gallery</strong> <span class="muted small">design v1.0.0</span>
+    <strong>Design gallery</strong> <span class="muted small">design v1.2.0</span>
     <span class="spacer"></span>
     <span class="muted small">Theme</span>
     <button class="btn sm" data-theme-set="blue">blue</button>
@@ -62,6 +62,8 @@
   <div class="row"><span class="badge muted">row</span><span class="grow muted">grow</span><span class="spacer"></span><span class="badge muted">after spacer</span></div>
   <div class="row wrap" style="margin-top:8px"><label>Name <input value="row.wrap"></label><button class="btn">Aligned button</button></div>
   <div class="grid2" style="margin-top:8px"><div class="card">grid2 a</div><div class="card">grid2 b</div></div>
+  <div class="grid3" style="margin-top:8px"><div class="card">grid3 a</div><div class="card">grid3 b</div><div class="card">grid3 c</div></div>
+  <div class="grid4" style="margin-top:8px"><div class="card">grid4 a</div><div class="card">grid4 b</div><div class="card">grid4 c</div><div class="card">grid4 d</div></div>
   <div class="g-frame" style="height:120px;margin-top:8px"><div class="center" style="min-height:100%">.center</div></div>
 </section>
 
@@ -189,11 +191,11 @@
   <h2>Tables, tabs, chips</h2>
   <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Name</th><th>Status</th><th class="num">Score</th><th class="right">Right</th></tr></thead>
+      <thead><tr><th>Name</th><th>Status</th><th class="num">Score</th><th class="right">Right</th><th>Actions</th></tr></thead>
       <tbody>
-        <tr class="clickable"><td>Alpha (clickable)</td><td><span class="badge ok">ok</span></td><td class="num">1,204</td><td class="right nowrap">a</td></tr>
-        <tr class="clickable"><td>Bravo</td><td><span class="badge warn">warn</span></td><td class="num">88</td><td class="right">b</td></tr>
-        <tr><td>Charlie (static)</td><td><span class="badge err">err</span></td><td class="num">7</td><td class="right">c</td></tr>
+        <tr class="clickable"><td>Alpha (clickable)</td><td><span class="badge ok">ok</span></td><td class="num">1,204</td><td class="right nowrap">a</td><td class="row"><a class="btn ghost sm" href="#">Manage</a><button class="btn ghost danger sm">Delete</button></td></tr>
+        <tr class="clickable"><td>Bravo</td><td><span class="badge warn">warn</span></td><td class="num">88</td><td class="right">b</td><td></td></tr>
+        <tr><td>Charlie (static)</td><td><span class="badge err">err</span></td><td class="num">7</td><td class="right">c</td><td></td></tr>
       </tbody>
     </table>
   </div>
@@ -214,6 +216,24 @@
     </table>
   </div>
   <p class="muted small">Row click has two modes per table: expand (chevron + <code>.rowdetail</code>) or open a <code>dialog.modal</code> (no chevron). In plain-HTML apps, <code>dsRowClick(tbody, handler)</code> wires the click and ignores clicks on links and buttons.</p>
+  <div class="g-sub">Toolbar, note, log and inset (inside a card)</div>
+  <div class="card">
+    <div class="toolbar">
+      <span class="badge err">disconnected</span>
+      <input placeholder="192.168.1.50" value="192.168.1.50" style="width:160px">
+      <button class="btn sm primary">Connect</button>
+      <button class="btn sm">Refresh</button>
+      <span class="badge muted">v1.2.0</span>
+    </div>
+    <p class="note">A note under a toolbar or a button row. Normal gap, small muted text.</p>
+    <pre class="log">[14:31:58] a log on a pre keeps its spacing
+[14:32:15] sits on --inset with a neutral edge</pre>
+    <div class="row">
+      <div class="stat sm"><div class="stat-label">Input</div><div class="stat-value">connected</div></div>
+      <div class="stat sm"><div class="stat-label">Bitmap</div><div class="stat-value mono">0x0a</div></div>
+      <span hidden>hidden attribute: not shown</span>
+    </div>
+  </div>
   <div class="g-sub">Tabs</div>
   <div class="tabs" id="g-tabs">
     <button class="tab on">Overview</button><button class="tab">Settings</button><button class="tab">Logs</button>

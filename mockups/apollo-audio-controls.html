@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en" data-theme="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apollo Audio Controls: mockup</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../design.css">
+<style>
+  /* app-only */
+  .gain-readout { font-size: 42px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .gain-readout .gain-unit { font-size: 16px; font-weight: 400; color: var(--muted); margin-left: 4px; }
+  .gain-readout .gain-meta { font-size: 13px; font-weight: 400; color: var(--muted); margin-left: 8px; }
+  .gain-step { width: 36px; padding-left: 0; padding-right: 0; }
+  .gain-row input[type=range] { flex: 1; min-width: 0; }
+  .device-field { width: 170px; font-family: var(--mono); }
+  .flag-btn { min-width: 88px; font-weight: 600; }
+  .flag-btn small { display: block; font-weight: 400; font-size: 11px; opacity: .75; }
+  .flag-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .stale { opacity: .5; }
+  .log { height: 300px; }
+  .m-bar { background: var(--panel-2); border-bottom: 1px dashed var(--border); padding: 8px 20px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="m-bar">
+  <div class="row wrap small">
+    <strong>Mockup</strong>
+    <span class="muted">Theme</span>
+    <button class="btn sm" data-theme-set="blue">blue</button>
+    <button class="btn sm" data-theme-set="gray">gray</button>
+    <button class="btn sm" data-theme-set="esb">esb</button>
+    <span class="muted">State</span>
+    <button class="btn sm" data-demo="off">disconnected</button>
+    <button class="btn sm" data-demo="live">connected, XLR in</button>
+    <button class="btn sm" data-demo="noxlr">connected, no input</button>
+    <span class="muted">Toast</span>
+    <button class="btn sm" data-toast="err">error</button>
+    <button class="btn sm" data-toast="warn">warning</button>
+    <button class="btn sm" data-toast="ok">success</button>
+    <button class="btn sm" data-toast="info">info</button>
+    <span class="muted">Modal</span>
+    <button class="btn sm" id="openPhantom">48V confirm</button>
+  </div>
+</div>
+
+<header class="topbar">
+  <span class="brand"><i class="fa-solid fa-sliders" style="color:var(--err)"></i> Apollo Audio Controls</span>
+  <span class="spacer"></span>
+  <div class="toolbar" style="justify-content:flex-end">
+    <span class="badge err" id="sessionPill"><i class="fa-solid fa-plug-circle-xmark"></i> disconnected</span>
+    <span class="badge muted" id="inputPill"><i class="fa-solid fa-plug"></i> <span id="inputText">input unknown</span></span>
+    <span class="row" style="gap:6px">
+      <i class="fa-solid fa-network-wired muted" title="IP address of the Apollo e1x"></i>
+      <input id="deviceInput" class="device-field" placeholder="192.168.1.50" autocomplete="off" spellcheck="false" aria-label="Apollo e1x IP address" value="192.168.1.50">
+    </span>
+    <button id="connectBtn" class="btn sm primary"><i class="fa-solid fa-link"></i> Connect</button>
+    <button id="refreshBtn" class="btn sm" title="Read the switches again" disabled><i class="fa-solid fa-rotate"></i> Refresh</button>
+    <span class="badge muted" id="versionBadge">v1.4.2</span>
+  </div>
+</header>
+
+<main class="content stack">
+
+  <div class="alert warn" id="offlineBanner">
+    <i class="fa-solid fa-plug-circle-xmark"></i>
+    Disconnected - nothing is being sent. The values below are the last ones seen.
+  </div>
+
+  <div class="grid2">
+
+    <section class="card">
+      <div class="row">
+        <h3 class="muted"><i class="fa-solid fa-microphone-lines"></i> Channel 1</h3>
+        <span class="spacer"></span>
+        <span class="badge muted" id="flagsBadge">0x0a</span>
+      </div>
+
+      <div class="stack" style="gap:10px">
+        <div class="stat-label">Gain</div>
+        <div class="gain-readout stale" id="gainReadout">
+          <span id="gainValue">42</span><span class="gain-unit">dB</span><span class="gain-meta" id="gainMeta">reported 14:32:07</span>
+        </div>
+        <div class="row gain-row">
+          <button class="btn sm gain-step" id="gainDown" title="-1 dB" disabled><i class="fa-solid fa-minus"></i></button>
+          <input type="range" id="gainRange" min="10" max="65" step="1" value="42" disabled>
+          <button class="btn sm gain-step" id="gainUp" title="+1 dB" disabled><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div class="row">
+          <span class="small muted" id="gainPending">10-65 dB, 1 dB per step</span>
+          <span class="spacer"></span>
+          <button class="btn sm primary" id="gainApply" disabled><i class="fa-solid fa-check"></i> Set gain</button>
+        </div>
+        <p class="note">Gain cannot be read back from the device - the value is only known once someone changes it.</p>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);width:100%;margin:0">
+
+      <div class="stack" style="gap:10px">
+        <div class="stat-label">Switches</div>
+        <div class="toolbar" id="flagButtons">
+          <button class="btn sm flag-btn" id="flag-48v" title="Phantom power">48V<small>0x01</small></button>
+          <button class="btn sm flag-btn" id="flag-mute" title="Also set by the device itself around 48V and HPF changes">MUTE<small>0x02</small></button>
+          <button class="btn sm flag-btn" id="flag-phase" title="Polarity invert">Ø<small>0x04</small></button>
+          <button class="btn sm flag-btn" id="flag-hpf" title="Low cut">HPF<small>0x08</small></button>
+          <button class="btn sm flag-btn" id="flag-pad" title="Attenuation">PAD<small>0x10</small></button>
+        </div>
+        <p class="note">MUTE is also set by the device itself around 48V (~3.5 s) and HPF changes (~1 s). That is pop protection.</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row">
+        <h3 class="muted"><i class="fa-solid fa-wave-square"></i> Activity</h3>
+        <span class="spacer"></span>
+        <button class="btn sm" id="clearBtn"><i class="fa-solid fa-eraser"></i> Clear</button>
+      </div>
+
+      <div class="log" id="log">
+        <div class="log-entry debug">[14:31:58] connecting to 192.168.1.50</div>
+        <div class="log-entry">[14:31:58] connected to 192.168.1.50</div>
+        <div class="log-entry debug">[14:31:59] flags 0x0a cap=0x1f</div>
+        <div class="log-entry">[14:32:07] gain set to 42 dB</div>
+        <div class="log-entry warn">[14:32:15] MUTE set by the device (48V change)</div>
+        <div class="log-entry err">[14:32:41] device did not confirm gain 55 dB</div>
+        <div class="log-entry warn">[14:33:02] the connection to the server dropped</div>
+        <div class="log-entry warn">[14:33:02] disconnected</div>
+      </div>
+
+      <div class="grid3">
+        <div class="stat sm">
+          <div class="stat-label">Input</div>
+          <div class="stat-value" id="infoDetect" style="font-size:14px">connected (0x1)</div>
+        </div>
+        <div class="stat sm">
+          <div class="stat-label">Bitmap</div>
+          <div class="stat-value mono" id="infoFlags" style="font-size:14px">0x0a  cap=0x1f</div>
+        </div>
+        <div class="stat sm">
+          <div class="stat-label">Last seen</div>
+          <div class="stat-value" id="infoSeen" style="font-size:14px">14:32:15</div>
+        </div>
+      </div>
+
+      <p class="note">Nothing reaches the e1x until you press Connect, and nothing after you disconnect.</p>
+    </section>
+
+  </div>
+</main>
+
+<footer class="footer">A project by NPetersen - <a href="https://github.com/NPetersenDK"><i class="fa-brands fa-github"></i> NPetersenDK</a> - <a href="https://nipetersen.dk">nipetersen.dk</a></footer>
+
+</div>
+
+<dialog class="modal wide" id="phantomModal">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--warn)"></i> Switch 48V on?</h2>
+  <p>Phantom power can destroy ribbon microphones and some condenser microphones.</p>
+  <p class="small muted">Unplug the microphone first if you are in any doubt. The device mutes itself for about 3.5 seconds around the change.</p>
+  <form method="dialog" class="row" style="justify-content:flex-end">
+    <button class="btn" value="cancel">Cancel</button>
+    <button class="btn danger" id="phantomConfirm" value="yes"><i class="fa-solid fa-bolt"></i> Yes, switch 48V on</button>
+  </form>
+</dialog>
+
+<script src="../design.js"></script>
+<script>
+(function () {
+  var root = document.documentElement;
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "blue");
+  document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  /* ---- mockup-only state switcher; mirrors what render() in app.js does ---- */
+  var $ = function (id) { return document.getElementById(id); };
+  var flags = { "48v": 0, mute: 1, phase: 0, hpf: 1, pad: 0 };
+
+  function drawFlags(live) {
+    Object.keys(flags).forEach(function (k) {
+      var b = $("flag-" + k), on = flags[k];
+      var variant = on ? "on" : "";
+      b.className = "btn sm flag-btn " + variant + (live ? "" : " stale");
+      b.disabled = !live;
+    });
+  }
+
+  function setState(s) {
+    var live = s !== "off";
+    var sp = $("sessionPill"), ip = $("inputPill");
+    sp.className = "badge " + (live ? "ok" : "err");
+    sp.innerHTML = live ? '<i class="fa-solid fa-plug-circle-check"></i> connected'
+                        : '<i class="fa-solid fa-plug-circle-xmark"></i> disconnected';
+    ip.className = "badge " + (s === "live" ? "ok" : s === "noxlr" ? "err" : "info");
+    $("inputText").textContent = s === "live" ? "XLR connected" : s === "noxlr" ? "nothing plugged in" : "input unknown";
+    if (s === "off") ip.className = "badge muted";
+    var cb = $("connectBtn");
+    cb.className = "btn sm " + (live ? "ghost" : "primary");
+    cb.innerHTML = live ? '<i class="fa-solid fa-link-slash"></i> Disconnect' : '<i class="fa-solid fa-link"></i> Connect';
+    $("deviceInput").disabled = live;
+    $("offlineBanner").classList.toggle("hidden", live);
+    $("gainReadout").classList.toggle("stale", !live);
+    ["gainRange", "gainApply", "gainUp", "gainDown", "refreshBtn"].forEach(function (id) { $(id).disabled = !live; });
+    drawFlags(live);
+  }
+  document.querySelectorAll("[data-demo]").forEach(function (b) {
+    b.addEventListener("click", function () { setState(b.dataset.demo); });
+  });
+  setState("off");
+
+  /* gain: slider shows "not sent yet" until Set gain */
+  $("gainRange").addEventListener("input", function () {
+    $("gainValue").textContent = this.value;
+    $("gainMeta").textContent = "not sent yet";
+  });
+  function sendGain(v) { $("gainValue").textContent = v; $("gainMeta").textContent = "reported 14:35:00"; dsToast("Set gain: " + v + " dB", "ok"); }
+  $("gainApply").addEventListener("click", function () { sendGain($("gainRange").value); });
+  $("gainUp").addEventListener("click", function () { $("gainRange").stepUp(); sendGain($("gainRange").value); });
+  $("gainDown").addEventListener("click", function () { $("gainRange").stepDown(); sendGain($("gainRange").value); });
+  $("clearBtn").addEventListener("click", function () { $("log").innerHTML = ""; });
+
+  /* flags: 48V on opens the confirm dialog */
+  var dlg = $("phantomModal");
+  Object.keys(flags).forEach(function (k) {
+    $("flag-" + k).addEventListener("click", function () {
+      if (k === "48v" && !flags[k]) { dlg.showModal(); return; }
+      flags[k] = flags[k] ? 0 : 1; drawFlags(true);
+    });
+  });
+  $("openPhantom").addEventListener("click", function () { dlg.showModal(); });
+  $("phantomConfirm").addEventListener("click", function () { flags["48v"] = 1; drawFlags(!$("connectBtn").classList.contains("primary")); });
+
+  var msgs = {
+    err: "Set gain: device did not confirm",
+    warn: "Connect: Enter the IP address of the e1x first",
+    ok: "Refresh: switches read",
+    info: "Connected to 192.168.1.50"
+  };
+  document.querySelectorAll("[data-toast]").forEach(function (b) {
+    b.addEventListener("click", function () { dsToast(msgs[b.dataset.toast], b.dataset.toast); });
+  });
+})();
+</script>
+</body>
+</html>

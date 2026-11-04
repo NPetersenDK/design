@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en" data-theme="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dante Streamer (golang-inferno-player mockup)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../design.css">
+<style>
+/* app-only */
+.m-bar { padding: 8px 20px; background: var(--panel-2); border-bottom: 1px solid var(--border); }
+.layout { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 14px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+.zone-item { background: var(--inset); border: 1px solid var(--border-strong); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.zone-item.active-zone { border-color: var(--accent-edge); box-shadow: 0 0 0 1px var(--accent-edge); }
+.zone-item.playing-zone { border-left: 4px solid var(--ok); }
+.zone-item.is-source { cursor: default; }
+.vu-bar { height: 4px; flex: 1; background: var(--border); border-radius: 2px; overflow: hidden; }
+.vu-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--ok) 0%, var(--warn) 80%, var(--err) 100%); transition: width 0.1s linear; }
+.station-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.sound-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+.station-item { background: var(--inset); border: 1px solid transparent; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+.station-item:hover, .sound-pad:hover { border-color: var(--accent-edge); background: var(--panel-2); }
+.sound-pad { min-height: 64px; padding: 8px 10px; border: 1px solid transparent; border-radius: 8px; background: var(--inset); color: var(--text); font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: transform 0.05s ease; }
+.sound-pad:active { transform: scale(0.97); border-color: var(--accent-edge); }
+.sound-pad.sound-pad-active { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); }
+.sound-pad span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.playing-sound { display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin-bottom: 4px; border: 1px solid transparent; border-radius: 8px; background: var(--inset); }
+.playing-sound-bar { width: 90px; height: 4px; flex: none; background: var(--border); border-radius: 2px; overflow: hidden; }
+.playing-sound-fill { height: 100%; background: var(--ok); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.vol-text { width: 36px; text-align: right; }
+.search { flex: 1; min-width: 160px; max-width: 320px; }
+.station-desc { min-height: 2.4em; line-height: 1.2; }
+.empty { text-align: center; padding: 32px 0; color: var(--muted); }
+.m-label { margin: 8px 0 -8px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="m-bar row wrap">
+  <strong>golang-inferno-player</strong> <span class="muted small">mockup, design v1.1.0</span>
+  <span class="spacer"></span>
+  <span class="muted small">Theme</span>
+  <button class="btn sm" data-theme-set="blue">blue</button>
+  <button class="btn sm" data-theme-set="gray">gray</button>
+  <button class="btn sm" data-theme-set="esb">esb</button>
+</div>
+
+<header class="topbar">
+  <a class="brand row" href="#"><i class="fa-solid fa-tower-broadcast" style="color:var(--err)"></i><span>Dante Streamer</span></a>
+  <span class="spacer"></span>
+  <div class="toolbar">
+    <span class="badge ok" id="clockPill"><i class="fa-solid fa-clock"></i> <span id="clockStatusText" title="PTP: locked to grandmaster 0a:1b:2c, offset 120 ns">PTP Locked (48kHz)</span></span>
+    <span class="badge info" id="devicePill"><i class="fa-solid fa-network-wired"></i> <span id="danteDeviceText">Dante-Pi</span></span>
+    <button id="stopAllBtn" class="btn sm ghost danger" title="Stop playback on all zones"><i class="fa-solid fa-stop"></i> Stop All</button>
+    <button id="openCustomModalBtn" class="btn sm" type="button"><i class="fa-solid fa-plus"></i> Custom URL</button>
+    <span class="badge muted" id="versionBadge">v1.4.2</span>
+  </div>
+</header>
+
+<main class="content">
+<div class="stack">
+
+<div class="layout">
+
+  <!-- Output zones -->
+  <section class="card">
+    <div class="row">
+      <h3><i class="fa-solid fa-sliders"></i> Output Zones</h3>
+      <span class="spacer"></span>
+      <span class="badge muted" id="activeZonesCount">2 Active</span>
+    </div>
+    <div id="zonesList" class="stack" style="gap:8px">
+
+      <!-- active zone + playing -->
+      <div class="zone-item active-zone playing-zone" data-zone="1">
+        <div class="row">
+          <div class="grow">
+            <div class="small"><strong>Lobby</strong></div>
+            <div class="muted small">Dante-Pi-L1 / Dante-Pi-R1</div>
+          </div>
+          <span class="badge ok"><i class="fa-solid fa-play"></i> Playing</span>
+        </div>
+        <div class="small muted truncate"><i class="fa-solid fa-music"></i> DR P3</div>
+        <div class="small truncate hidden" style="color:var(--ok)"><i class="fa-solid fa-grip"></i> <span></span></div>
+        <div class="stack" style="gap:4px">
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">L</span><div class="vu-bar"><div class="vu-fill" style="width:72%"></div></div></div>
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">R</span><div class="vu-bar"><div class="vu-fill" style="width:64%"></div></div></div>
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn sm btn-mute" title="Mute"><i class="fa-solid fa-volume-high"></i></button>
+          <input type="range" class="grow" min="0" max="100" value="65" title="Volume: 65%">
+          <span class="small muted vol-text">65%</span>
+          <button class="btn sm ghost danger" title="Stop Zone"><i class="fa-solid fa-stop"></i></button>
+        </div>
+      </div>
+
+      <!-- buffering -->
+      <div class="zone-item" data-zone="2">
+        <div class="row">
+          <div class="grow">
+            <div class="small"><strong>Cafeteria</strong></div>
+            <div class="muted small">Dante-Pi-L2 / Dante-Pi-R2</div>
+          </div>
+          <span class="badge warn"><i class="fa-solid fa-spinner fa-spin"></i> Buffering</span>
+        </div>
+        <div class="small muted truncate"><i class="fa-solid fa-music"></i> Radio24syv Jazz</div>
+        <div class="small truncate hidden" style="color:var(--ok)"><i class="fa-solid fa-grip"></i> <span></span></div>
+        <div class="stack" style="gap:4px">
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">L</span><div class="vu-bar"><div class="vu-fill" style="width:0%"></div></div></div>
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">R</span><div class="vu-bar"><div class="vu-fill" style="width:0%"></div></div></div>
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn sm btn-mute" title="Mute"><i class="fa-solid fa-volume-high"></i></button>
+          <input type="range" class="grow" min="0" max="100" value="40" title="Volume: 40%">
+          <span class="small muted vol-text">40%</span>
+          <button class="btn sm ghost danger" title="Stop Zone"><i class="fa-solid fa-stop"></i></button>
+        </div>
+      </div>
+
+      <!-- idle, muted, loud VU (red end of the gradient) shown on a sounds zone below -->
+      <div class="zone-item" data-zone="3">
+        <div class="row">
+          <div class="grow">
+            <div class="small"><strong>Meeting room</strong></div>
+            <div class="muted small">Dante-Pi-L3 / Dante-Pi-R3</div>
+          </div>
+          <span class="badge muted">Idle</span>
+        </div>
+        <div class="small muted truncate"><i class="fa-solid fa-music"></i> No stream</div>
+        <div class="small truncate hidden" style="color:var(--ok)"><i class="fa-solid fa-grip"></i> <span></span></div>
+        <div class="stack" style="gap:4px">
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">L</span><div class="vu-bar"><div class="vu-fill" style="width:0%"></div></div></div>
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">R</span><div class="vu-bar"><div class="vu-fill" style="width:0%"></div></div></div>
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn sm btn-mute" title="Unmute"><i class="fa-solid fa-volume-xmark" style="color:var(--err)"></i></button>
+          <input type="range" class="grow" min="0" max="100" value="0" title="Volume: 0%">
+          <span class="small muted vol-text">0%</span>
+          <button class="btn sm ghost danger" title="Stop Zone" disabled><i class="fa-solid fa-stop"></i></button>
+        </div>
+      </div>
+
+      <!-- playing sounds only (pad over idle zone) -->
+      <div class="zone-item playing-zone" data-zone="4">
+        <div class="row">
+          <div class="grow">
+            <div class="small"><strong>Warehouse</strong></div>
+            <div class="muted small">Dante-Pi-L4 / Dante-Pi-R4</div>
+          </div>
+          <span class="badge ok"><i class="fa-solid fa-grip"></i> Sounds</span>
+        </div>
+        <div class="small muted truncate"><i class="fa-solid fa-music"></i> No stream</div>
+        <div class="small truncate" style="color:var(--ok)"><i class="fa-solid fa-grip"></i> <span>Air horn</span></div>
+        <div class="stack" style="gap:4px">
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">L</span><div class="vu-bar"><div class="vu-fill" style="width:96%"></div></div></div>
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">R</span><div class="vu-bar"><div class="vu-fill" style="width:91%"></div></div></div>
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn sm btn-mute" title="Mute"><i class="fa-solid fa-volume-high"></i></button>
+          <input type="range" class="grow" min="0" max="100" value="85" title="Volume: 85%">
+          <span class="small muted vol-text">85%</span>
+          <button class="btn sm ghost danger" title="Stop Zone" disabled><i class="fa-solid fa-stop"></i></button>
+        </div>
+      </div>
+
+      <!-- source zone: waiting, never a play target, stop button hidden -->
+      <div class="zone-item is-source" data-zone="5" data-source="1">
+        <div class="row">
+          <div class="grow">
+            <div class="small"><strong>Mixer feed (source)</strong></div>
+            <div class="muted small">Dante-Mix-L / Dante-Mix-R</div>
+          </div>
+          <span class="badge muted"><i class="fa-solid fa-plug"></i> Waiting</span>
+        </div>
+        <div class="small muted truncate"><i class="fa-solid fa-music"></i> No stream</div>
+        <div class="small truncate hidden" style="color:var(--ok)"><i class="fa-solid fa-grip"></i> <span></span></div>
+        <div class="stack" style="gap:4px">
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">L</span><div class="vu-bar"><div class="vu-fill" style="width:0%"></div></div></div>
+          <div class="row" style="gap:6px"><span class="muted small" style="width:8px">R</span><div class="vu-bar"><div class="vu-fill" style="width:0%"></div></div></div>
+        </div>
+        <div class="row" style="gap:8px">
+          <button class="btn sm btn-mute" title="Mute"><i class="fa-solid fa-volume-high"></i></button>
+          <input type="range" class="grow" min="0" max="100" value="100" title="Volume: 100%">
+          <span class="small muted vol-text">100%</span>
+          <button class="btn sm ghost danger hidden" title="Stop Zone"><i class="fa-solid fa-stop"></i></button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Sources -->
+  <section class="card">
+    <div class="toolbar">
+      <div class="tabs grow" id="sourceTabs" style="border-bottom:0">
+        <button class="tab on" data-panel="radio"><i class="fa-solid fa-radio"></i> Internet Radio</button>
+        <button class="tab" id="tabFm" data-panel="fm"><i class="fa-solid fa-tower-broadcast"></i> Radio</button>
+        <button class="tab" id="tabSoundboard" data-panel="soundboard"><i class="fa-solid fa-grip"></i> Soundboard</button>
+      </div>
+      <span class="muted small nowrap">Play to:</span>
+      <select id="targetZoneSelect" style="min-width:140px">
+        <option value="1" selected>Lobby</option>
+        <option value="2">Cafeteria</option>
+        <option value="3">Meeting room</option>
+        <option value="4">Warehouse</option>
+      </select>
+    </div>
+
+    <!-- Internet radio -->
+    <div id="panel-radio" class="stack" style="gap:12px">
+      <div class="row">
+        <i class="fa-solid fa-magnifying-glass muted"></i>
+        <input type="text" id="stationSearchInput" class="grow" placeholder="Search station name or description...">
+      </div>
+      <div class="chips" id="categoryNav">
+        <button class="chip on" data-category="all">All</button>
+        <button class="chip" data-category="News">News</button>
+        <button class="chip" data-category="Music">Music</button>
+        <button class="chip" data-category="Jazz">Jazz</button>
+        <button class="chip" data-category="Classical">Classical</button>
+      </div>
+      <div class="station-grid" id="stationsGrid">
+        <div class="station-item">
+          <div>
+            <div class="row" style="align-items:flex-start;gap:6px"><strong class="small truncate grow">DR P1</strong><span class="badge muted">News</span></div>
+            <p class="muted small station-desc" style="margin:4px 0 0">Talk, news and documentaries from Danmarks Radio.</p>
+          </div>
+          <div class="row" style="border-top:1px solid var(--border);padding-top:8px">
+            <span class="muted small grow"><i class="fa-solid fa-wave-square"></i> 192k</span>
+            <button class="btn sm primary"><i class="fa-solid fa-play"></i> Play</button>
+          </div>
+        </div>
+        <div class="station-item">
+          <div>
+            <div class="row" style="align-items:flex-start;gap:6px"><strong class="small truncate grow">DR P3</strong><span class="badge muted">Music</span></div>
+            <p class="muted small station-desc" style="margin:4px 0 0">Pop, rock and new Danish music.</p>
+          </div>
+          <div class="row" style="border-top:1px solid var(--border);padding-top:8px">
+            <span class="muted small grow"><i class="fa-solid fa-wave-square"></i> 192k</span>
+            <button class="btn sm primary"><i class="fa-solid fa-play"></i> Play</button>
+          </div>
+        </div>
+        <div class="station-item">
+          <div>
+            <div class="row" style="align-items:flex-start;gap:6px"><strong class="small truncate grow">Radio24syv Jazz</strong><span class="badge muted">Jazz</span></div>
+            <p class="muted small station-desc" style="margin:4px 0 0">Smooth jazz around the clock.</p>
+          </div>
+          <div class="row" style="border-top:1px solid var(--border);padding-top:8px">
+            <span class="muted small grow"><i class="fa-solid fa-wave-square"></i> 128k</span>
+            <button class="btn sm primary"><i class="fa-solid fa-play"></i> Play</button>
+          </div>
+        </div>
+        <div class="station-item">
+          <div>
+            <div class="row" style="align-items:flex-start;gap:6px"><strong class="small truncate grow">DR P2 Klassisk</strong><span class="badge muted">Classical</span></div>
+            <p class="muted small station-desc" style="margin:4px 0 0">Classical concerts, opera and chamber music.</p>
+          </div>
+          <div class="row" style="border-top:1px solid var(--border);padding-top:8px">
+            <span class="muted small grow"><i class="fa-solid fa-wave-square"></i> 320k</span>
+            <button class="btn sm primary"><i class="fa-solid fa-play"></i> Play</button>
+          </div>
+        </div>
+        <div class="station-item">
+          <div>
+            <div class="row" style="align-items:flex-start;gap:6px"><strong class="small truncate grow">Lounge FM</strong><span class="badge muted">Stream</span></div>
+            <p class="muted small station-desc" style="margin:4px 0 0"></p>
+          </div>
+          <div class="row" style="border-top:1px solid var(--border);padding-top:8px">
+            <span class="muted small grow"><i class="fa-solid fa-wave-square"></i> 192k</span>
+            <button class="btn sm primary"><i class="fa-solid fa-play"></i> Play</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tuner (filled by app.js only when the tuner feature is enabled) -->
+    <div id="panel-fm" class="stack" style="gap:12px" hidden>
+      <div class="row">
+        <strong><i class="fa-solid fa-tower-broadcast"></i> Radio</strong>
+        <span class="spacer"></span>
+        <span class="small success">DAB+ &mdash; 12A &middot; service 0x9001</span>
+      </div>
+      <div class="toolbar">
+        <button class="btn sm primary"><span class="badge muted">DAB+</span> DR P1 DAB</button>
+        <button class="btn sm"><span class="badge muted">FM</span> DR P3 FM</button>
+        <button class="btn sm"><span class="badge muted">FM</span> Radio Soft</button>
+        <!-- empty state: <span class="muted small">No presets configured.</span> -->
+      </div>
+      <p class="note">FM and DAB+ share the one receiver, so only one plays at a time.</p>
+      <div class="toolbar" style="max-width:420px">
+        <input type="number" class="grow" step="0.1" min="87.5" max="108" placeholder="FM MHz" value="93.9">
+        <button class="btn sm nowrap">Tune FM</button>
+      </div>
+      <div class="toolbar" style="max-width:420px">
+        <input type="text" class="grow" style="min-width:0" placeholder="Channel, e.g. 12A" value="12A">
+        <input type="text" class="grow" style="min-width:0" placeholder="Service, e.g. 0x9001" value="0x9001">
+        <button class="btn sm nowrap">Tune DAB+</button>
+      </div>
+      <div class="toolbar">
+        <button class="btn sm">List services</button>
+        <button class="btn sm ghost danger">Off</button>
+      </div>
+      <pre class="log small" style="margin:0">[
+  { "service_id": "0x9001", "label": "DR P1" },
+  { "service_id": "0x9002", "label": "DR P2" },
+  { "service_id": "0x9003", "label": "DR P3" }
+]</pre>
+      <div class="small"><span class="muted">Status states:</span> <span class="success">DAB+ &mdash; 12A</span> &middot; <span class="error">Dongle not found</span> &middot; <span class="muted">Off</span></div>
+    </div>
+
+    <!-- Soundboard -->
+    <div id="panel-soundboard" class="stack" style="gap:12px" hidden>
+      <div class="toolbar">
+        <i class="fa-solid fa-magnifying-glass muted"></i>
+        <input type="text" id="soundSearchInput" class="search" placeholder="Search sounds...">
+        <span class="spacer"></span>
+        <button id="stopSoundsBtn" class="btn sm ghost danger"><i class="fa-solid fa-stop"></i> Stop All Sounds</button>
+      </div>
+      <div id="soundboardMsg" class="alert warn small">Zone 4 is a source zone and cannot play sounds.</div>
+      <div id="playingSounds">
+        <div class="playing-sound">
+          <button class="btn sm ghost danger" title="Stop this sound"><i class="fa-solid fa-stop"></i></button>
+          <span class="small truncate grow">Air horn</span>
+          <div class="playing-sound-bar"><div class="playing-sound-fill" style="width:35%"></div></div>
+        </div>
+        <div class="playing-sound">
+          <button class="btn sm ghost danger" title="Stop this sound"><i class="fa-solid fa-stop"></i></button>
+          <span class="small truncate grow">Doorbell</span>
+          <div class="playing-sound-bar"><div class="playing-sound-fill" style="width:80%"></div></div>
+        </div>
+      </div>
+      <div class="sound-grid" id="soundsGrid">
+        <button class="sound-pad sound-pad-active" title="Air horn (2.4s)"><span>Air horn</span></button>
+        <button class="sound-pad sound-pad-active" title="Doorbell (1.1s)"><span>Doorbell</span></button>
+        <button class="sound-pad" title="Applause (6.0s)"><span>Applause</span></button>
+        <button class="sound-pad" title="Fire alarm test (12.5s)"><span>Fire alarm test</span></button>
+        <button class="sound-pad" title="Gong (3.2s)"><span>Gong</span></button>
+        <button class="sound-pad" title="Announcement chime with a very long name (1.8s)"><span>Announcement chime with a very long name</span></button>
+        <button class="sound-pad" title="Lunch bell (2.0s)"><span>Lunch bell</span></button>
+        <button class="sound-pad" title="Sad trombone"><span>Sad trombone</span></button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Other states (the app shows one of these in place of the grid) -->
+<h3 class="m-label">Other states</h3>
+<div class="grid3">
+  <div class="card">
+    <span class="muted small">Zones loading</span>
+    <div class="empty" style="padding:12px 0"><i class="fa-solid fa-spinner fa-spin"></i> Connecting to Dante engine...</div>
+  </div>
+  <div class="card">
+    <span class="muted small">Stations loading / none found</span>
+    <div class="empty" style="padding:12px 0"><i class="fa-solid fa-spinner fa-spin"></i> Loading stations...</div>
+    <div class="empty" style="padding:12px 0">
+      <p style="margin:0"><i class="fa-solid fa-circle-exclamation"></i> No stations found.</p>
+      <small>Define your stations in <code>config.yaml</code> or click "Custom URL" in the top bar.</small>
+    </div>
+  </div>
+  <div class="card">
+    <span class="muted small">Soundboard error / empty</span>
+    <div class="empty" style="padding:12px 0"><i class="fa-solid fa-triangle-exclamation"></i> Cannot read sounds directory: permission denied</div>
+    <div class="empty" style="padding:12px 0">
+      <p style="margin:0"><i class="fa-solid fa-folder-open"></i> No sounds found.</p>
+      <small>Drop audio files into <code>/var/lib/inferno/sounds</code> &mdash; they appear here without a restart.</small>
+    </div>
+  </div>
+</div>
+<div class="row wrap">
+  <span class="muted small">Clock and device pills</span>
+  <span class="badge ok"><i class="fa-solid fa-clock"></i> PTP Locked (48kHz)</span>
+  <span class="badge warn"><i class="fa-solid fa-clock"></i> PTP Syncing</span>
+  <span class="badge err"><i class="fa-solid fa-clock"></i> Clock status unknown</span>
+  <span class="badge info"><i class="fa-solid fa-network-wired"></i> Dante-Pi</span>
+</div>
+
+</div>
+</main>
+
+<footer class="footer muted">A project by NPetersen - <a href="https://github.com/NPetersenDK"><i class="fa-brands fa-github"></i> NPetersenDK</a> - <a href="https://nipetersen.dk">nipetersen.dk</a></footer>
+
+</div>
+
+<!-- Custom URL modal -->
+<dialog class="modal wide" id="customUrlModal" aria-labelledby="customUrlModalLabel">
+  <div class="row">
+    <h2 id="customUrlModalLabel" style="font-size:16px"><i class="fa-solid fa-link"></i> Stream Custom Audio URL</h2>
+    <span class="spacer"></span>
+    <form method="dialog"><button class="btn sm ghost" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></form>
+  </div>
+  <form id="customStreamForm" class="stack" style="gap:14px">
+    <label>Target Zone
+      <select id="modalZoneSelect">
+        <option value="1">Lobby</option>
+        <option value="2">Cafeteria</option>
+        <option value="3">Meeting room</option>
+        <option value="4">Warehouse</option>
+      </select>
+    </label>
+    <label>Stream URL (HLS / AAC / MP3 / Icecast)
+      <input type="url" id="customUrlInput" placeholder="https://stream.example.com/live.m3u8" required>
+    </label>
+    <label>Display Name (Optional)
+      <input type="text" id="customNameInput" placeholder="My Custom Stream">
+    </label>
+    <div class="row" style="justify-content:flex-end">
+      <button type="button" class="btn" id="customCancelBtn">Cancel</button>
+      <button type="submit" class="btn primary"><i class="fa-solid fa-play"></i> Play Stream</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="../design.js"></script>
+<script>
+(function () {
+  var root = document.documentElement;
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "blue");
+  document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  /* mockup-only behaviour: just enough to flip the states */
+  var tabs = document.getElementById("sourceTabs");
+  tabs.addEventListener("click", function (e) {
+    var t = e.target.closest(".tab"); if (!t) return;
+    tabs.querySelectorAll(".tab").forEach(function (x) { x.classList.toggle("on", x === t); });
+    ["radio", "fm", "soundboard"].forEach(function (p) {
+      document.getElementById("panel-" + p).hidden = p !== t.dataset.panel;
+    });
+  });
+  document.getElementById("categoryNav").addEventListener("click", function (e) {
+    var c = e.target.closest(".chip"); if (!c) return;
+    document.querySelectorAll("#categoryNav .chip").forEach(function (x) { x.classList.toggle("on", x === c); });
+  });
+  document.getElementById("zonesList").addEventListener("click", function (e) {
+    var z = e.target.closest(".zone-item");
+    if (!z || e.target.closest("button, input") || z.dataset.source) return;
+    document.querySelectorAll(".zone-item").forEach(function (x) { x.classList.toggle("active-zone", x === z); });
+    document.getElementById("targetZoneSelect").value = z.dataset.zone;
+  });
+  document.querySelectorAll(".zone-item input[type=range]").forEach(function (r) {
+    r.addEventListener("input", function () {
+      r.parentNode.querySelector(".vol-text").textContent = r.value + "%";
+      r.title = "Volume: " + r.value + "%";
+    });
+  });
+  document.getElementById("soundsGrid").addEventListener("click", function (e) {
+    var p = e.target.closest(".sound-pad"); if (p) p.classList.toggle("sound-pad-active");
+  });
+
+  var dlg = document.getElementById("customUrlModal");
+  var form = document.getElementById("customStreamForm");
+  document.getElementById("openCustomModalBtn").addEventListener("click", function () { dlg.showModal(); });
+  document.getElementById("customCancelBtn").addEventListener("click", function () { dlg.close(); });
+  form.addEventListener("submit", function (e) { e.preventDefault(); dlg.close(); form.reset(); });
+})();
+</script>
+</body>
+</html>
