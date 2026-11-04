@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en" data-theme="gray">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example App: servers and create server (mockup)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../../design.css">
+<style>
+  /* app-only */
+  .m-bar { background: var(--panel-2); border-bottom: 1px dashed var(--border); padding: 8px 20px; }
+  .players-badge { margin-left: 6px; }
+  .create-actions { align-items: center; }
+  .spinner { margin-right: 6px; }
+  .topbar .dropdown { margin-left: auto; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="m-bar">
+  <div class="row wrap small">
+    <strong>Mockup</strong>
+    <span class="muted">Theme</span>
+    <button class="btn sm" data-theme-set="blue">blue</button>
+    <button class="btn sm" data-theme-set="gray">gray</button>
+    <button class="btn sm" data-theme-set="esb">esb</button>
+    <span class="muted">View</span>
+    <button class="btn sm" data-view="front">1 Front page</button>
+    <button class="btn sm" data-view="create">2 Create server</button>
+    <button class="btn sm" data-view="created">3 With new server</button>
+    <span class="muted">Front page state</span>
+    <button class="btn sm" data-list="empty">no servers</button>
+    <button class="btn sm" data-list="none-mine">none of mine</button>
+    <button class="btn sm" data-list="full">full list</button>
+    <span class="muted">Create state</span>
+    <button class="btn sm" data-cstate="fill">fill form</button>
+    <button class="btn sm" data-cstate="invalid">validation errors</button>
+    <button class="btn sm" data-cstate="apierr">API error</button>
+    <button class="btn sm" data-cstate="popup">popup error</button>
+    <button class="btn sm" data-cstate="busy">creating...</button>
+    <button class="btn sm" data-cstate="loaderr">games failed to load</button>
+  </div>
+</div>
+
+<header class="topbar">
+  <a href="#" class="brand">Example App</a>
+  <nav class="nav">
+    <a href="#" class="active" data-view="front">Servers</a>
+    <a href="#">Section A</a>
+    <a href="#">Section B</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="dropdown" id="userMenu">
+    <button class="btn primary user-profile-button" id="userBtn" aria-haspopup="menu" aria-expanded="false">
+      <i class="fa-solid fa-circle-user" aria-hidden="true"></i> Hi Alex <i class="fa-solid fa-caret-down" aria-hidden="true"></i>
+    </button>
+    <div class="dropdown-menu" role="menu" hidden id="userDrop">
+      <div class="dropdown-header"><i class="fa-solid fa-id-badge" aria-hidden="true"></i> admin</div>
+      <a class="dropdown-item" role="menuitem" href="#"><i class="fa-solid fa-user" aria-hidden="true"></i> Profile</a>
+      <hr class="dropdown-divider">
+      <button class="dropdown-item" role="menuitem"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- Views 1 and 3: the servers table (the create card sits under it in the app) -->
+  <div class="stack" id="viewFront">
+    <div class="row wrap">
+      <h2>Servers</h2>
+      <div class="spacer"></div>
+      <div class="toolbar">
+        <label class="switch muted"><input type="checkbox" id="onlyMine"> My servers</label>
+        <label class="switch muted"><input type="checkbox" id="showNode"> Show node info</label>
+      </div>
+    </div>
+    <div class="error" id="listErr" hidden></div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead id="thead"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="slotFront"></div>
+  </div>
+
+  <!-- View 2: the create flow on its own -->
+  <div class="stack" id="viewCreate" hidden>
+    <div class="row wrap"><h2>Servers</h2><span class="muted small">The New server card sits below the table; shown alone here.</span></div>
+    <div id="slotCreate">
+      <form class="card" id="createForm" novalidate>
+        <h3>New server</h3>
+        <div class="grid2" id="mainFields">
+          <label>Game<select id="fGame"></select></label>
+          <label>Display name<input id="fName" placeholder="My server name" required></label>
+        </div>
+        <div class="note" id="persistNote" hidden>This game keeps its data across restarts automatically.</div>
+
+        <details class="advanced" id="adv">
+          <summary>Advanced settings</summary>
+          <div class="stack" style="gap:12px">
+            <div class="grid2" id="advFields">
+              <label id="ownerWrap">Owner
+                <select id="fOwner">
+                  <option value="">Me (Alex Example)</option>
+                  <option value="example-club">Group: example-club</option>
+                  <option value="sample-team">Group: sample-team</option>
+                </select>
+              </label>
+            </div>
+            <div class="note" id="publicNote" hidden>Public server: connectivity is provisioned automatically.</div>
+            <label class="switch" id="persistWrap"><input type="checkbox" id="fPersist"> Keep demos/configs across restarts (persistent scratch)</label>
+            <label class="switch"><input type="checkbox" id="fAuto"> Auto-update to new game builds when nobody is playing</label>
+            <label class="switch"><input type="checkbox" id="fDestroy"> Destroy this server after sitting idle (admin-configured window)</label>
+            <label class="switch"><input type="checkbox" id="fShutdown"> Shut down this server after sitting idle (admin-configured window)</label>
+          </div>
+        </details>
+
+        <div class="error" id="formErr" hidden></div>
+        <div class="row create-actions">
+          <button class="btn primary" id="submitBtn" type="submit">Create server</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</main>
+
+<footer class="footer muted center-text">
+  <i>
+    Site created with <i class="fa-regular fa-heart" aria-hidden="true"></i> by Example Club
+    and Alex Example
+    <br>
+    Code is available at:
+    <a href="https://example.com/">Source <i class="fa-brands fa-github" aria-hidden="true"></i></a>
+    (Now Open Source!)
+  </i>
+</footer>
+</div>
+
+<script src="../../design.js"></script>
+<script>
+(function () {
+  var root = document.documentElement;
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "gray");
+  document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  var EMPTY = '<span aria-hidden="true">-</span><span class="sr-only">not set</span>';
+
+  /* ---------- user menu ---------- */
+  var ub = $("userBtn"), ud = $("userDrop");
+  function menu(open) { ud.hidden = !open; ub.setAttribute("aria-expanded", open ? "true" : "false"); }
+  ub.addEventListener("click", function () { menu(ud.hidden); });
+  document.addEventListener("mousedown", function (e) { if (!$("userMenu").contains(e.target)) menu(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") menu(false); });
+
+  /* ---------- sample data ---------- */
+  var games = [
+    { name: "cs2", displayName: "Counter-Strike 2", persistData: false, enforcePassword: true, autoUpdate: true, destroyOnIdle: false, shutdownOnIdle: true,
+      options: [
+        { key: "map", label: "Map", type: "enum", default: "de_dust2", choices: [{ value: "de_dust2", label: "Dust II" }, { value: "de_mirage", label: "Mirage" }, { value: "de_inferno", label: "Inferno" }] },
+        { key: "maxplayers", label: "Max players", type: "int", default: "10", min: 2, max: 32 },
+        { key: "password", label: "Password", type: "string" },
+        { key: "public", label: "Public server", type: "bool", default: "false" },
+        { key: "tickrate", label: "Tick rate", type: "enum", default: "64", advanced: true, choices: [{ value: "64" }, { value: "128" }] },
+        { key: "motd", label: "Message of the day", type: "string", default: "Welcome!", advanced: true }
+      ] },
+    { name: "minecraft", displayName: "Minecraft Java", persistData: true, enforcePassword: false, autoUpdate: false, destroyOnIdle: false, shutdownOnIdle: true,
+      options: [
+        { key: "gamemode", label: "Game mode", type: "enum", default: "survival", choices: [{ value: "survival", label: "Survival" }, { value: "creative", label: "Creative" }] },
+        { key: "maxplayers", label: "Max players", type: "int", default: "20", min: 1, max: 100 },
+        { key: "viewdistance", label: "View distance", type: "int", default: "10", min: 3, max: 32, advanced: true }
+      ] },
+    { name: "valheim", displayName: "Valheim", persistData: false, enforcePassword: true, autoUpdate: true, destroyOnIdle: true, shutdownOnIdle: false,
+      options: [
+        { key: "world", label: "World name", type: "string", default: "Midgard" },
+        { key: "password", label: "Password", type: "string" },
+        { key: "public", label: "Public server", type: "bool", default: "true", advanced: true }
+      ] }
+  ];
+  var gameNames = { cs2: "Counter-Strike 2", minecraft: "Minecraft Java", valheim: "Valheim" };
+  var servers = [
+    { name: "cs2-friday-night", displayName: "Friday Scrims", game: "cs2", owner: "alex", ownerKind: "", phase: "Ready", address: "203.0.113.20", ports: [{ name: "game", port: 27015, protocol: "udp" }, { name: "rcon", port: 27016, protocol: "tcp" }], usage: { cpuCores: 0.42, memoryMi: 1380 }, node: "node-a2", createdAt: "2026-10-28", autoUpdate: true, destroyOnIdle: false, shutdownOnIdle: true, playerCount: 7, playerNames: ["Player One", "Player Two", "Player Three", "Player Four", "Player Five", "Player Six", "Player Seven"] },
+    { name: "mc-survival", displayName: "Sample Realm", game: "minecraft", owner: "sample-team", ownerKind: "group", phase: "Ready", address: "203.0.113.21", ports: [{ name: "game", port: 25565, protocol: "tcp" }], usage: { cpuCores: 1.35, memoryMi: 3480 }, node: "node-b1", createdAt: "2026-09-12", autoUpdate: false, destroyOnIdle: false, shutdownOnIdle: true, playerCount: 0 },
+    { name: "valheim-saga", displayName: "Example Saga", game: "valheim", owner: "sam", ownerKind: "", phase: "Starting", address: "", ports: null, usage: null, node: "", createdAt: "2026-11-02", autoUpdate: true, destroyOnIdle: true, shutdownOnIdle: false },
+    { name: "cs2-test", displayName: "Config Test", game: "cs2", owner: "example-club", ownerKind: "group", phase: "Stopped", address: "203.0.113.22", ports: [{ name: "game", port: 27015, protocol: "udp" }], usage: null, node: "node-a1", createdAt: "2026-08-03", autoUpdate: false, destroyOnIdle: false, shutdownOnIdle: false },
+    { name: "mc-old-world", displayName: "Old World", game: "minecraft", owner: "alex", ownerKind: "", phase: "Error", address: "", ports: null, usage: null, node: "node-b2", createdAt: "2026-07-19", autoUpdate: false, destroyOnIdle: false, shutdownOnIdle: false },
+    { name: "valheim-tmp", displayName: "Throwaway", game: "valheim", owner: "sam", ownerKind: "", phase: "Ready", deleting: true, address: "203.0.113.23", ports: [{ name: "game", port: 2456, protocol: "udp" }], usage: { cpuCores: 0.08, memoryMi: 640 }, node: "node-a2", createdAt: "2026-10-30", autoUpdate: false, destroyOnIdle: true, shutdownOnIdle: false }
+  ];
+  var newServer = { name: "cs2-clan-practice", displayName: "Clan Practice", game: "cs2", owner: "alex", ownerKind: "", phase: "Pending", address: "", ports: null, usage: null, node: "", createdAt: "2026-11-04", autoUpdate: true, destroyOnIdle: false, shutdownOnIdle: true };
+  var me = { subject: "alex", name: "Alex Example", groups: ["example-club", "sample-team"] };
+  var ownerNames = { alex: "Alex Example (alex)", sam: "Sam Sample (sam)" };
+
+  /* ---------- servers table ---------- */
+  var listMode = "full", withNew = false, expanded = {};
+  function fmtCores(c) { return c >= 1 ? c.toFixed(2) + " cores" : Math.round(c * 1000) + " mCPU"; }
+  function fmtMi(mi) { return mi >= 1024 ? (mi / 1024).toFixed(1) + " GiB" : Math.round(mi) + " MiB"; }
+  function isMine(s) { return s.ownerKind === "group" ? me.groups.indexOf(s.owner) >= 0 : s.owner === me.subject; }
+  function phaseBadge(s) {
+    if (s.deleting) return '<span class="badge muted">Deleting</span>';
+    var cls = s.phase === "Ready" ? "ok" : s.phase === "Error" ? "err" : s.phase === "Stopped" ? "muted" : "warn";
+    return '<span class="badge ' + cls + '">' + (s.phase ? esc(s.phase) : EMPTY) + '</span>';
+  }
+  function renderTable() {
+    var node = $("showNode").checked, mine = $("onlyMine").checked;
+    var all = listMode === "empty" ? [] : servers.slice();
+    if (listMode !== "empty" && withNew) all.push(newServer);
+    var vis = mine ? all.filter(isMine) : all;
+    if (listMode === "none-mine") vis = [];
+    var emptyMsg = (mine && all.length > 0) || listMode === "none-mine" ? "No servers of yours." : "No servers yet.";
+    $("thead").innerHTML = "<tr><th></th><th>Name</th><th>Game</th><th>Status</th><th>Address</th><th>CPU</th><th>Memory</th>" +
+      (node ? "<th>Node</th>" : "") + "<th>Created</th><th></th></tr>";
+    var h = "";
+    if (!vis.length) h += '<tr><td colspan="' + (node ? 10 : 9) + '" class="muted">' + emptyMsg + "</td></tr>";
+    vis.forEach(function (s) {
+      var game = (s.ports || []).filter(function (p) { return p.name === "game"; })[0];
+      var open = !!expanded[s.name];
+      h += '<tr class="clickable' + (open ? " open" : "") + '" data-name="' + esc(s.name) + '">' +
+        '<td class="chev"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></td>' +
+        '<td><a href="#">' + esc(s.displayName || s.name) + '</a></td>' +
+        '<td>' + esc(gameNames[s.game] || s.game) + '</td>' +
+        '<td>' + phaseBadge(s) +
+          (s.playerCount > 0 ? '<span class="badge ok players-badge" title="' + esc((s.playerNames || []).join(", ")) + '">' + s.playerCount + ' online</span>' : "") + '</td>' +
+        '<td class="mono">' + (s.address && game ? esc(s.address + ":" + game.port) : EMPTY) + '</td>' +
+        '<td class="mono">' + (s.usage ? fmtCores(s.usage.cpuCores) : EMPTY) + '</td>' +
+        '<td class="mono">' + (s.usage ? fmtMi(s.usage.memoryMi) : EMPTY) + '</td>' +
+        (node ? '<td class="mono">' + (s.node ? esc(s.node) : EMPTY) + '</td>' : "") +
+        '<td class="muted">' + (s.createdAt ? esc(s.createdAt) : EMPTY) + '</td>' +
+        '<td><a class="btn ghost sm" href="#">Manage</a></td></tr>';
+      if (open) {
+        var owner = s.ownerKind === "group" ? s.owner : (ownerNames[s.owner] || s.owner);
+        h += '<tr class="rowdetail"><td></td><td colspan="' + (node ? 9 : 8) + '"><div class="rowdetail-grid muted">' +
+          '<span>Node: <b class="mono">' + (s.node ? esc(s.node) : EMPTY) + '</b></span>' +
+          '<span>Owner: <b>' + esc(owner) + '</b>' + (s.ownerKind === "group" ? " (group)" : "") + '</span>' +
+          '<span>Auto-update: <b>' + (s.autoUpdate ? "on" : "off") + '</b></span>' +
+          '<span>Destroy on idle: <b>' + (s.destroyOnIdle ? "on" : "off") + '</b></span>' +
+          '<span>Shut down on idle: <b>' + (s.shutdownOnIdle ? "on" : "off") + '</b></span>' +
+          (s.ports || []).filter(function (p) { return p.name !== "game"; }).map(function (p) {
+            return '<span class="mono">' + esc(p.name + ": " + s.address + ":" + p.port + "/" + p.protocol) + '</span>';
+          }).join("") + '</div></td></tr>';
+      }
+    });
+    $("tbody").innerHTML = h;
+  }
+  dsRowClick($("tbody"), function (tr) {
+    var n = tr.dataset.name;
+    expanded[n] = !expanded[n];
+    renderTable();
+  });
+  $("onlyMine").addEventListener("change", function () { if (listMode === "none-mine") listMode = "full"; renderTable(); });
+  $("showNode").addEventListener("change", renderTable);
+
+  /* ---------- create form ---------- */
+  var cfg = {}, game = null, optEls = {};
+  var form = $("createForm");
+  function genPassword(n) {
+    var a = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789", o = "";
+    for (var i = 0; i < n; i++) o += a[Math.floor(Math.random() * a.length)];
+    return o;
+  }
+  function optField(o, required) {
+    var label = o.label || o.key, w = document.createElement("label"), el;
+    if (o.type === "enum") {
+      w.appendChild(document.createTextNode(label));
+      el = document.createElement("select");
+      (o.choices || []).forEach(function (c) { var op = document.createElement("option"); op.value = c.value; op.textContent = c.label || c.value; el.appendChild(op); });
+      el.value = cfg[o.key] || "";
+      el.addEventListener("change", function () { cfg[o.key] = el.value; });
+    } else if (o.type === "int") {
+      w.appendChild(document.createTextNode(label));
+      el = document.createElement("input"); el.type = "number";
+      if (o.min != null) el.min = o.min; if (o.max != null) el.max = o.max;
+      el.value = cfg[o.key] || "";
+      el.addEventListener("input", function () { cfg[o.key] = el.value; });
+    } else if (o.type === "bool") {
+      w.className = "switch";
+      el = document.createElement("input"); el.type = "checkbox"; el.checked = cfg[o.key] === "true";
+      w.appendChild(el); w.appendChild(document.createTextNode(label));
+      el.addEventListener("change", function () { cfg[o.key] = el.checked ? "true" : "false"; updatePublicNote(); });
+    } else {
+      w.appendChild(document.createTextNode(label + (required ? " (required)" : "")));
+      el = document.createElement("input"); el.value = cfg[o.key] || "";
+      if (required) el.required = true;
+      el.addEventListener("input", function () { cfg[o.key] = el.value; });
+    }
+    optEls[o.key] = el;
+    return w;
+  }
+  function updatePublicNote() { $("publicNote").hidden = !(!game.persistData && cfg["public"] === "true"); }
+  function loadGame(name) {
+    game = games.filter(function (g) { return g.name === name; })[0];
+    cfg = {}; optEls = {};
+    game.options.forEach(function (o) { if (o.default) cfg[o.key] = o.default; });
+    var hasPw = game.options.some(function (o) { return o.key === "password"; });
+    if (game.enforcePassword && hasPw && !cfg.password) cfg.password = genPassword(8);
+    var main = $("mainFields");
+    while (main.children.length > 2) main.removeChild(main.lastChild);
+    var adv = $("advFields");
+    while (adv.children.length > 1) adv.removeChild(adv.lastChild);
+    game.options.forEach(function (o) {
+      if (o.advanced) adv.appendChild(optField(o, false));
+      else main.appendChild(optField(o, game.enforcePassword && o.key === "password"));
+    });
+    $("persistNote").hidden = !game.persistData;
+    $("persistWrap").hidden = game.persistData;
+    $("fAuto").checked = game.autoUpdate;
+    $("fDestroy").checked = game.destroyOnIdle;
+    $("fShutdown").checked = game.shutdownOnIdle;
+    updatePublicNote();
+    clearErrors();
+  }
+  var gameSel = $("fGame");
+  games.forEach(function (g) { var o = document.createElement("option"); o.value = g.name; o.textContent = g.displayName; gameSel.appendChild(o); });
+  gameSel.addEventListener("change", function () { loadGame(gameSel.value); });
+
+  function clearErrors() {
+    dsFieldError($("fName"), "");
+    Object.keys(optEls).forEach(function (k) { dsFieldError(optEls[k], ""); });
+    $("formErr").hidden = true;
+  }
+  function validate() {
+    clearErrors();
+    var ok = true;
+    if (!$("fName").value.trim()) { dsFieldError($("fName"), "Display name is required."); ok = false; }
+    game.options.forEach(function (o) {
+      var el = optEls[o.key], v = (cfg[o.key] || "").trim();
+      if (o.key === "password" && game.enforcePassword && !v) { dsFieldError(el, "Password is required for this game."); ok = false; }
+      if (o.type === "int" && v !== "") {
+        var n = Number(v);
+        if (isNaN(n) || (o.min != null && n < o.min) || (o.max != null && n > o.max)) {
+          dsFieldError(el, label(o) + " must be between " + o.min + " and " + o.max + "."); ok = false;
+          if (o.advanced) $("adv").open = true;
+        }
+      }
+    });
+    return ok;
+  }
+  function label(o) { return o.label || o.key; }
+  function setBusy(b) {
+    var btn = $("submitBtn");
+    btn.disabled = b;
+    btn.innerHTML = b ? '<i class="fa-solid fa-circle-notch fa-spin spinner" aria-hidden="true"></i>Creating...' : "Create server";
+  }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!validate()) return;
+    setBusy(true);
+    setTimeout(function () {
+      setBusy(false);
+      newServer.displayName = $("fName").value.trim();
+      newServer.game = game.name;
+      withNew = true; listMode = "full";
+      $("fName").value = "";
+      dsToast("Server created. It is starting up.", "ok");
+      show("created");
+    }, 1200);
+  });
+
+  /* ---------- views ---------- */
+  function show(v) {
+    var create = v === "create";
+    $("viewFront").hidden = create;
+    $("viewCreate").hidden = !create;
+    var card = form;
+    if (create) $("slotCreate").appendChild(card); else $("slotFront").appendChild(card);
+    if (v === "front") { withNew = false; if (listMode === "none-mine") listMode = "full"; }
+    if (v === "created") { withNew = true; if (listMode === "empty") listMode = "full"; }
+    renderTable();
+  }
+  document.querySelectorAll("[data-view]").forEach(function (b) {
+    b.addEventListener("click", function (e) { e.preventDefault(); show(b.dataset.view); });
+  });
+  document.querySelectorAll("[data-list]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      listMode = b.dataset.list; withNew = false;
+      $("onlyMine").checked = false;
+      show("front");
+    });
+  });
+  document.querySelectorAll("[data-cstate]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var s = b.dataset.cstate;
+      show("create");
+      setBusy(false); clearErrors();
+      if (s === "fill") { loadGame("cs2"); gameSel.value = "cs2"; $("fName").value = "Clan Practice"; }
+      if (s === "invalid") {
+        gameSel.value = "cs2"; loadGame("cs2");
+        $("fName").value = ""; cfg.password = ""; optEls.password.value = "";
+        cfg.maxplayers = "64"; optEls.maxplayers.value = "64";
+        validate();
+      }
+      if (s === "apierr") {
+        $("fName").value = "Clan Practice";
+        $("formErr").textContent = "a server named \"cs2-clan-practice\" already exists";
+        $("formErr").hidden = false;
+      }
+      if (s === "popup") dsError("The server could not be created because the cluster is out of capacity. Try again in a few minutes.", "Could not create server");
+      if (s === "busy") { $("fName").value = "Clan Practice"; setBusy(true); }
+      if (s === "loaderr") {
+        $("formErr").textContent = "Could not load the game list: 502 Bad Gateway";
+        $("formErr").hidden = false;
+        $("submitBtn").disabled = true;
+      }
+    });
+  });
+
+  loadGame("cs2");
+  show("front");
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1250 @@
+<!doctype html>
+<html lang="da" data-theme="esb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example Club: inside an event (mockup)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../../design.css">
+<style>
+  /* app-only */
+
+  /* Demo bar (not part of the app) */
+  .m-bar { background: var(--panel-2); border-bottom: 1px dashed var(--border-strong); padding: 8px 20px; }
+  .m-bar .m-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .m-bar .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .m-bar label.checkbox { font-size: 13px; }
+  .m-stub { border: 1px dashed var(--border-strong); border-radius: 8px; padding: 10px 14px; }
+  .invisible { visibility: hidden; }
+  .ts-toggle { min-width: 230px; }
+  dialog.modal { max-height: calc(100dvh - 32px); overflow-y: auto; }
+
+  /* Bracket: rounds in columns, slot cards, connector lines */
+  .bracket-scroll { overflow-x: auto; padding-top: 12px; padding-bottom: 4px; }
+  .bracket { display: flex; flex-direction: column; gap: 22px; --bz: 28px; }
+  .bracket-champion { font-weight: 700; font-size: 1.1rem; }
+  .bracket-champion i { color: var(--warn); }
+  .bracket-rounds { display: flex; gap: 0; align-items: stretch; }
+  .bracket-round { display: flex; flex-direction: column; flex: 0 0 auto; min-width: 210px; }
+  .bracket-round-title { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .bracket-round-slots { display: flex; flex-direction: column; flex: 1; }
+  .bracket-cell { position: relative; display: flex; align-items: center; flex: 1 1 0; padding-block: 5px; }
+  .bracket-cell.has-next { padding-right: var(--bz); }
+  .bracket-cell.has-prev { padding-left: var(--bz); }
+  .bracket-cell.has-next::after { content: ""; position: absolute; right: 0; top: 50%; width: var(--bz); height: 1px; background: var(--border-strong); }
+  .bracket-cell.has-prev::before { content: ""; position: absolute; left: 0; top: 50%; width: var(--bz); height: 1px; background: var(--border-strong); }
+  .bracket-join { position: absolute; right: 0; width: 1px; height: 50%; background: var(--border-strong); }
+  .bracket-cell.link-down > .bracket-join { top: 50%; }
+  .bracket-cell.link-up > .bracket-join { top: 0; }
+  .bracket-slot { position: relative; width: 100%; background: var(--panel); border: 1px solid var(--border-strong); border-radius: 6px; }
+  .bracket-slot.is-clickable { cursor: pointer; }
+  .bracket-slot.is-clickable:hover { border-color: var(--accent-edge); }
+  .bracket-slot.is-selected { border-color: var(--accent-edge); box-shadow: 0 0 0 1px var(--accent-edge); }
+  .bracket-slot.is-live { border-color: var(--err); }
+  .bracket-live { position: absolute; top: -8px; right: 6px; background: var(--err); color: #fff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 8px; }
+  .bracket-bo3 { position: absolute; top: -8px; left: 6px; background: var(--panel); color: var(--muted); border: 1px solid var(--border-strong); font-size: 0.65rem; font-weight: 700; padding: 0 6px; border-radius: 8px; }
+  .bracket-team { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-left: 3px solid transparent; min-width: 0; }
+  .bracket-team + .bracket-team { border-top: 1px solid var(--border-strong); }
+  .bracket-seed { flex: 0 0 1.4em; font-size: 0.75rem; color: var(--muted); text-align: right; }
+  .bracket-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bracket-name.muted { color: var(--muted); }
+  .bracket-score { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .bracket-team.is-winner { font-weight: 700; border-left-color: var(--ok); }
+  .bracket-team.is-loser { color: var(--muted); }
+  .bracket-team.is-draggable { cursor: grab; }
+  .bracket-team.is-dragging { opacity: 0.4; }
+  .bracket-team.is-drop { background: var(--panel-2); box-shadow: inset 0 0 0 1px var(--accent-edge); }
+  .bracket-server { display: flex; align-items: center; gap: 6px; padding: 3px 8px; border-top: 1px solid var(--border-strong); font-size: 0.72rem; color: var(--muted); min-width: 0; }
+  .bracket-server span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Lock bar: a .card (locked) or an .alert.warn (pending) laid out as one row */
+  .bracket-bar { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 10px 12px; }
+  .bracket-bar-text { flex: 1 1 280px; }
+
+  /* Server guide progress */
+  .srv-progress { height: 10px; border-radius: 5px; background: var(--inset); border: 1px solid var(--border-strong); overflow: hidden; }
+  .srv-progress > div { height: 100%; background: var(--ok); transition: width 0.4s; }
+
+  /* Bracket dialog: eBot box and BO3 maps (surfaces inside a panel use --inset) */
+  .slot-maps { display: flex; flex-direction: column; gap: 8px; }
+  .slot-map, .slot-ebot {
+    display: flex; flex-direction: column; gap: 8px; padding: 10px 12px;
+    background: var(--inset); border: 1px solid var(--border-strong); border-radius: 8px;
+  }
+  .slot-map.is-current { border-color: var(--accent-edge); }
+  .slot-map-head, .slot-ebot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 10px; }
+  .slot-ebot-form { display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--border-strong); padding-top: 10px; }
+  .slot-ebot-head + .slot-ebot-form { border-top: 0; padding-top: 0; }
+  .slot-ebot-form select { width: 100%; }
+  .slot-server-select { min-width: 0; flex: 1 1 200px; }
+
+  /* Match table */
+  .table td.chev:empty { cursor: default; }
+  .team-pair { white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="m-bar">
+  <div class="row wrap small">
+    <strong>Mockup</strong>
+    <span class="muted">Tema</span>
+    <span class="m-group">
+      <button class="btn sm" data-theme-set="blue">blue</button>
+      <button class="btn sm" data-theme-set="gray">gray</button>
+      <button class="btn sm" data-theme-set="esb">esb</button>
+    </span>
+    <span class="muted">Tilstand</span>
+    <span class="m-group" id="stateBtns">
+      <button class="btn sm" data-view="pre">før lås</button>
+      <button class="btn sm" data-view="live">låst, kampe kører</button>
+      <button class="btn sm" data-view="done">færdig og arkiveret</button>
+      <button class="btn sm" data-view="pairs">uden bracket</button>
+    </span>
+    <span class="muted">Bracket-dialog</span>
+    <span class="m-group">
+      <button class="btn sm" data-scen="live">kamp kører</button>
+      <button class="btn sm" data-scen="reserved">ikke startet</button>
+      <button class="btn sm" data-scen="new">ingen kamp</button>
+      <button class="btn sm" data-scen="noservers">ingen servere</button>
+      <button class="btn sm" data-scen="finished">færdig</button>
+      <button class="btn sm" data-scen="missing">mangler i eBot</button>
+      <button class="btn sm" data-scen="bo3">BO3</button>
+      <button class="btn sm" data-scen="pending">afventer</button>
+    </span>
+    <span class="muted">Fejl og beskeder</span>
+    <span class="m-group">
+      <label class="checkbox"><input type="checkbox" id="failBox"> næste handling fejler</label>
+      <label class="checkbox"><input type="checkbox" id="permBox"> uden ret til at oprette servere</label>
+      <button class="btn sm" data-toast="ok">toast ok</button>
+      <button class="btn sm" data-toast="warn">toast advarsel</button>
+      <button class="btn sm" data-toast="err">toast fejl</button>
+    </span>
+  </div>
+</div>
+
+<header class="topbar">
+  <a href="#" class="brand"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Example Club</a>
+  <nav class="nav">
+    <a href="#">Home</a>
+    <div class="dropdown">
+      <button class="nav-dropdown-toggle" data-dd="ddCs">Section <i class="fa-solid fa-caret-down" aria-hidden="true"></i></button>
+      <div class="dropdown-menu" id="ddCs" hidden>
+        <a class="dropdown-item" href="#">Item one</a>
+        <a class="dropdown-item" href="#">Item two</a>
+      </div>
+    </div>
+    <a href="#" class="active">Events</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="dropdown">
+    <button class="btn primary user-profile-button" data-dd="ddUser"><i class="fa-solid fa-circle-user" aria-hidden="true"></i> Hej Alex Example <i class="fa-solid fa-caret-down" aria-hidden="true"></i></button>
+    <div class="dropdown-menu" id="ddUser" hidden>
+      <a class="dropdown-item" href="#"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Events</a>
+      <a class="dropdown-item" href="#"><i class="fa-solid fa-user" aria-hidden="true"></i> Profile</a>
+      <hr class="dropdown-divider">
+      <button class="dropdown-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Log ud</button>
+    </div>
+  </div>
+</header>
+
+<main class="content">
+<div class="stack">
+
+  <!-- Event header: back, name, kind -->
+  <div class="row wrap">
+    <button class="btn ghost" id="backBtn"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Tilbage til events</button>
+    <h2 id="evTitle"></h2>
+    <span class="badge" id="evKind"></span>
+  </div>
+
+  <!-- Event card: fields and actions -->
+  <div class="card">
+    <div class="row wrap">
+      <h3>Event</h3>
+      <span class="badge ok" id="evActiveBadge" hidden>Kører nu</span>
+      <div class="spacer"></div>
+      <a href="#" id="infoLink">Åbn infoskærm <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>
+    </div>
+    <div class="grid2">
+      <label>Navn <input id="fName"></label>
+      <label>Dato <input type="datetime-local" id="fDate"></label>
+    </div>
+    <div class="grid4">
+      <label>Format
+        <select id="fFormat">
+          <option value="tournament">Turneringsformat</option>
+          <option value="casual">Casualformat</option>
+          <option value="none">Ingen format</option>
+        </select>
+      </label>
+      <label>Kampe
+        <select id="fMode">
+          <option value="standard">Almindelig 5v5</option>
+          <option value="wingman">Wingman 2v2</option>
+        </select>
+      </label>
+      <label>Bracket
+        <select id="fBracket">
+          <option value="single">Single Elimination</option>
+          <option value="double">Double Elimination</option>
+          <option value="none">Ingen bracket</option>
+        </select>
+      </label>
+      <label>Finaler
+        <select id="fFinals">
+          <option value="1">BO1</option>
+          <option value="3">BO3</option>
+        </select>
+      </label>
+    </div>
+    <label>Noter <input id="fNotes"></label>
+    <label>Velkomsttekst <input id="fWelcome" placeholder="Vises i velkomst-popup'en på forsiden når eventet kører"></label>
+    <label>Billet-produkt (webshop)
+      <select id="fSku">
+        <option value="">- ingen -</option>
+        <option value="DEMO-TICKET">DEMO-TICKET (40 billetter)</option>
+      </select>
+      <span class="muted small">Kobler eventet til ordrerne, så Hold-hjælperen kan foreslå de tilmeldte.</span>
+    </label>
+    <div class="row wrap">
+      <button class="btn danger" id="endBtn" title="Afslut det kørende event (kun ét kan køre ad gangen)"><i class="fa-solid fa-stop" aria-hidden="true"></i> Afslut event</button>
+      <button class="btn primary" id="startBtn" title="Start eventet - det bliver det aktive event og vises som velkomst på forsiden (kun ét kan køre ad gangen)"><i class="fa-solid fa-play" aria-hidden="true"></i> Start event</button>
+      <button class="btn" id="saveBtn" disabled>Gem</button>
+      <span id="archiveSlot" class="row wrap"></span>
+      <div class="spacer"></div>
+      <button class="btn ghost danger" id="delEventBtn">Slet event</button>
+    </div>
+    <div id="evErrAnchor"></div>
+  </div>
+
+  <!-- 1. Hold (full team UI lives in the list/wizard mockup) -->
+  <div class="row wrap">
+    <h3 id="teamsH">1. Hold</h3>
+    <div class="spacer"></div>
+    <a href="#" class="btn ghost sm"><i class="fa-solid fa-book" aria-hidden="true"></i> Spillerregister</a>
+  </div>
+  <p class="muted" id="teamsP"></p>
+  <div class="m-stub">
+    <div class="small muted" style="margin-bottom:6px">Mockup-pladsholder: holdkort og hold-hjælper er en del af den anden mockup (liste, guide, seeding, hold).</div>
+    <div class="toolbar" id="teamBadges"></div>
+  </div>
+
+  <!-- TeamSpeak actions -->
+  <div class="card" id="tsCard">
+    <p class="muted small">Ved at give holdene et tag, gør det dét muligt at TeamSpeak automatisk flytter holdene der benytter PC-Computerne.</p>
+    <div class="row wrap">
+      <button class="btn" id="tsCreate" type="button"><i class="fa-brands fa-teamspeak" aria-hidden="true"></i> <span>Opret TeamSpeak-kanaler</span></button>
+      <button class="btn ghost ts-toggle" id="tsMove" type="button">Aktiver automatisk flytning</button>
+      <span class="badge ok" id="tsBadge"></span>
+    </div>
+  </div>
+
+  <!-- 2. Seeding (stub) and 3. Bracket -->
+  <div id="bracketArea" class="stack">
+    <h3>2. Seeding</h3>
+    <div class="m-stub">
+      <div class="small muted" style="margin-bottom:6px">Mockup-pladsholder: seeding-panelet er en del af den anden mockup.</div>
+      <span class="badge muted" id="seedBadge">Seedet</span>
+    </div>
+    <h3>3. Bracket</h3>
+    <div class="stack" id="bracketPanel"></div>
+    <div class="card stack" id="timeCard">
+      <div class="row wrap">
+        <h3><i class="fa-solid fa-clock" aria-hidden="true"></i> Tidsplan</h3>
+        <div class="spacer"></div>
+        <span class="badge info">Ca. 3 t 0 min - 3 t 45 min</span>
+      </div>
+      <p class="muted small">3 omgange med 3 servere, regnet med 35 min. pr. kamp og 10 min til at komme i gang. Starter I kl. 18.00, er I færdige ca. kl. 21.00-21.45.</p>
+    </div>
+    <div id="guideSlot"></div>
+  </div>
+
+  <!-- Kampe -->
+  <h3>Kampe</h3>
+  <p class="muted">Kampene opretter du her, og de bliver automatisk lavet ovre i eBot. For at starte/stoppe osv. skal du, for nu, stadig ind i eBot.</p>
+  <form class="card" id="pairForm" hidden>
+    <div class="alert warn" id="pairWarn">
+      Hov! Det ligner ikke der er nok eBot servere tilrådighed :( - Der er 1 brugbar server til skabelonen pt, men med 8 hold oprettet så kan 4 kampe spilles samtidig.
+      <a href="#">Gå til eBot-servere</a> for at oprette flere.
+      <button type="button" class="btn ghost sm" id="pairReload">Genindlæs</button>
+    </div>
+    <div class="row wrap">
+      <label class="grow">Hold A (CT)
+        <select id="pA" required><option value="">Vælg…</option></select>
+      </label>
+      <label class="grow">Hold B (T)
+        <select id="pB" required><option value="">Vælg…</option></select>
+      </label>
+      <label class="grow">Skabelon
+        <select id="pT"><option>Kamp 5v5</option><option>Wingman 2v2</option></select>
+      </label>
+      <label class="grow">Map
+        <select id="pM" required>
+          <option>de_mirage</option><option>de_inferno</option><option>de_ancient</option><option>de_nuke</option><option>de_anubis</option>
+        </select>
+      </label>
+      <label class="grow">Server
+        <select id="pS" required>
+          <option value="">Vælg server…</option>
+          <option value="1">Demo - WAR #1</option>
+        </select>
+      </label>
+      <label class="switch"><input type="checkbox" id="pStart"> Start med det samme</label>
+      <button class="btn primary" id="pGo" disabled>Opret kamp</button>
+    </div>
+  </form>
+  <div id="matchErrAnchor"></div>
+  <div class="table-wrap">
+    <table class="table" id="matchTable">
+      <thead>
+        <tr><th class="chev" style="width:28px"></th><th>Hold</th><th>Skabelon</th><th>Server</th><th>Status</th><th>Score</th><th></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="muted small">Tip: infoskærmen viser det nyeste event på en storskærm; et link med ?event= fastlåser et bestemt event.</div>
+
+</div>
+</main>
+
+<footer class="footer muted center-text">
+  <i>Site created with <i class="fa-regular fa-heart" aria-hidden="true"></i> by Example Club (mockup footer)</i>
+</footer>
+</div>
+
+<!-- Bracket dialog -->
+<dialog class="modal wide" id="slotDlg" aria-labelledby="slotTitle">
+  <h2 id="slotTitle"></h2>
+  <div class="stack" id="slotBody" style="gap:14px"></div>
+</dialog>
+
+<!-- Confirm dialog (stands in for the app's confirm() prompts) -->
+<dialog class="modal wide" id="confirmDlg" aria-labelledby="cfTitle">
+  <h2 id="cfTitle">Bekræft</h2>
+  <p id="cfMsg"></p>
+  <div class="row" style="justify-content:flex-end">
+    <button class="btn ghost" id="cfNo" type="button">Annuller</button>
+    <button class="btn" id="cfYes" type="button">OK</button>
+  </div>
+</dialog>
+
+<!-- Archive confirm dialog -->
+<dialog class="modal wide" id="archiveDlg" aria-labelledby="arcTitle">
+  <h2 id="arcTitle"></h2>
+  <p class="muted small">Eventet flyttes til arkivet, og <b>automatisk flytning i TeamSpeak slås fra</b> (brugere holdes ikke længere i deres hold-kanal). Hold, kampe og kanaler røres ikke - du kan gendanne eventet igen.</p>
+  <div class="row wrap">
+    <button class="btn danger" id="arcYes" type="button">Ja, arkiver</button>
+    <button class="btn ghost" id="arcNo" type="button">Annuller</button>
+  </div>
+  <div id="arcErrAnchor"></div>
+</dialog>
+
+<script src="../../design.js"></script>
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  /* ---------- theme (same as shared/tables.html) ---------- */
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "esb");
+  $$("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  /* ---------- dropdowns ---------- */
+  $$("[data-dd]").forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var m = document.getElementById(b.dataset.dd);
+      var open = m.hidden;
+      $$(".dropdown-menu").forEach(function (x) { x.hidden = true; });
+      m.hidden = !open;
+    });
+  });
+  document.addEventListener("click", function () { $$(".dropdown-menu").forEach(function (x) { x.hidden = true; }); });
+  $("#logoutBtn").addEventListener("click", function () { dsToast("Log ud er kun en demo her.", "info"); });
+
+  /* ---------- sample data (all invented) ---------- */
+  var TEAMS = ["Nordlys", "Rød Ugle", "Jernbanen", "Blå Måge", "Kaktus Klan", "Sorte Svaner", "Lille Ulv", "Grøn Hare"];
+  var ALL_SERVERS = [
+    { id: 1, host: "Demo - WAR #1", ip: "192.0.2.11:27015", game: "cs2-match" },
+    { id: 2, host: "Demo - WAR #2", ip: "192.0.2.12:27015", game: "cs2-match" },
+    { id: 3, host: "Demo - WAR #3", ip: "192.0.2.13:27015", game: "cs2-match" }
+  ];
+  var SERVER_TYPES = [
+    { game: "cs2-match", label: "Kampserver 5v5", prefix: "Demo - WAR" },
+    { game: "cs2-wingman", label: "Wingman 2v2", prefix: "Demo - WM" }
+  ];
+  var MAPS = ["de_mirage", "de_inferno", "de_ancient", "de_nuke", "de_anubis"];
+  var NEEDED = 3;
+
+  var VIEWS = {
+    pre:   { name: "Sample LAN Spring", kind: "lan", fmt: "tournament", bracket: "single", finals: 3, active: false, archived: false, locked: false, servers: 1, ts: false, hasBracket: true, missing: true },
+    live:  { name: "Sample LAN Spring", kind: "lan", fmt: "tournament", bracket: "single", finals: 3, active: true,  archived: false, locked: true,  servers: 3, ts: true,  hasBracket: true, missing: false },
+    done:  { name: "Sample LAN Spring", kind: "lan", fmt: "tournament", bracket: "single", finals: 3, active: false, archived: true,  locked: true,  servers: 3, ts: false, hasBracket: true, missing: false },
+    pairs: { name: "Sample Casual Evening", kind: "casual", fmt: "none", bracket: "none", finals: 1, active: false, archived: false, locked: false, servers: 1, ts: false, hasBracket: false, missing: false }
+  };
+
+  var S = {};
+
+  /* ---------- helpers ---------- */
+  function statusText(status, live) {
+    if (status === 0) return "Ikke startet";
+    if (status >= 1 && status <= 12) return live ? "I gang" : "Stoppet";
+    return "Færdig";
+  }
+  function srv(id) { return ALL_SERVERS[id - 1]; }
+  function E(sa, sb, status, live, sid, id) {
+    var s = srv(sid);
+    return { sa: sa, sb: sb, status: status, live: live, sid: sid, host: s.host, ip: s.ip, id: id, missing: false, created: "14.11.2026 " + (17 + (id % 3)) + "." + (10 + (id % 40)) };
+  }
+  function ebotWinner(e) {
+    if (!e || e.missing || e.status < 13 || e.sa === e.sb) return "";
+    return e.sa > e.sb ? "a" : "b";
+  }
+  function roundTitle(r) { return r === 3 ? "Finale" : r === 2 ? "Semifinale" : "Kvartfinale"; }
+  function failNow() {
+    if (!S.fail) return false;
+    S.fail = false; $("#failBox").checked = false;
+    dsError("Serveren svarede ikke. Prøv igen om lidt.", "Handlingen mislykkedes");
+    return true;
+  }
+
+  /* ---------- confirm dialog ---------- */
+  var cfDlg = $("#confirmDlg"), cfCb = null;
+  function dsConfirm(msg, okLabel, danger, cb) {
+    $("#cfMsg").textContent = msg;
+    var y = $("#cfYes");
+    y.textContent = okLabel || "OK";
+    y.className = "btn " + (danger ? "danger" : "primary");
+    cfCb = cb;
+    cfDlg.showModal();
+  }
+  $("#cfNo").addEventListener("click", function () { cfCb = null; cfDlg.close(); });
+  $("#cfYes").addEventListener("click", function () { var cb = cfCb; cfCb = null; cfDlg.close(); if (cb) cb(); });
+
+  /* ---------- bracket model ---------- */
+  function mk(id, round, idx, a, as, b, bs, r1) {
+    var bye = !!r1 && (!a || !b);
+    return { id: id, round: round, idx: idx, a: a, as: as, b: b, bs: bs, bye: bye, win: bye ? (a ? "a" : (b ? "b" : "")) : "", bo3: false, wa: 0, wb: 0, e: null, linked: false, games: [] };
+  }
+  function winner(s) {
+    return s.win === "a" ? { n: s.a, s: s.as } : s.win === "b" ? { n: s.b, s: s.bs } : { n: "", s: 0 };
+  }
+  function link(s, e) { s.e = e; s.linked = true; }
+
+  function buildSlots() {
+    var p = S.pos, v = S.view;
+    var r1 = [[1, 8], [4, 5], [2, 7], [3, 6]].map(function (q, i) {
+      return mk("W1-" + i, 1, i, p[q[0]], q[0], p[q[1]], q[1], true);
+    });
+    var r2 = [0, 1].map(function (i) { return mk("W2-" + i, 2, i, "", 0, "", 0, false); });
+    var f = mk("W3-0", 3, 0, "", 0, "", 0, false);
+    f.bo3 = true;
+    f.games = [{ i: 0, w: "", matchId: false, e: null }, { i: 1, w: "", matchId: false, e: null }];
+    if (v === "live" || v === "done") {
+      link(r1[1], E(10, 13, 13, false, 1, 4812)); r1[1].win = "b";
+      link(r1[2], E(13, 4, 13, false, 2, 4813));
+      if (v === "live") {
+        link(r1[3], E(9, 7, 5, true, 3, 4814));
+      } else {
+        r1[2].win = "a";
+        link(r1[3], E(13, 11, 13, false, 3, 4814)); r1[3].win = "a";
+      }
+    }
+    S.slots = r1.concat(r2, [f]);
+    propagate();
+    if (v === "live") { link(r2[0], E(0, 0, 0, false, 1, 4815)); }
+    if (v === "done") {
+      link(r2[0], E(13, 8, 13, false, 1, 4815)); r2[0].win = "a";
+      link(r2[1], E(13, 7, 13, false, 2, 4816)); r2[1].win = "a";
+      propagate();
+      f.games = [
+        { i: 0, w: "a", matchId: true, e: E(13, 10, 13, false, 1, 4817) },
+        { i: 1, w: "b", matchId: true, e: E(9, 13, 13, false, 2, 4818) },
+        { i: 2, w: "a", matchId: true, e: E(13, 6, 13, false, 3, 4819) }
+      ];
+      f.wa = 2; f.wb = 1; f.win = "a"; link(f, f.games[2].e);
+    }
+  }
+  // Teams move on to the next round from the winners of the previous one.
+  function propagate() {
+    var s = S.slots, w = s.slice(0, 4).map(winner);
+    [0, 1].forEach(function (i) {
+      var t = s[4 + i];
+      t.a = w[2 * i].n; t.as = w[2 * i].s; t.b = w[2 * i + 1].n; t.bs = w[2 * i + 1].s;
+    });
+    var w2 = [winner(s[4]), winner(s[5])];
+    s[6].a = w2[0].n; s[6].as = w2[0].s; s[6].b = w2[1].n; s[6].bs = w2[1].s;
+  }
+
+  function matchRows() {
+    var rows = [];
+    S.slots.forEach(function (s) {
+      var a = s.a, b = s.b;
+      if (s.bo3) {
+        s.games.forEach(function (g) {
+          if (g.matchId && g.e) rows.push({ a: a, b: b, e: g.e, slot: s, game: g, where: roundTitle(s.round) + ", map " + (g.i + 1) });
+        });
+      } else if (s.linked && s.e) {
+        rows.push({ a: a, b: b, e: s.e, slot: s, game: null, where: roundTitle(s.round) });
+      }
+    });
+    return rows.concat(S.manual);
+  }
+  function usageMap() {
+    var u = {};
+    matchRows().forEach(function (r) {
+      var e = r.e;
+      if (!e || e.missing || e.status >= 13) return;
+      var state = e.live ? "i brug" : e.status === 0 ? "reserveret" : "stoppet";
+      if (!u[e.sid] || e.live) u[e.sid] = state + ": " + r.a + " vs " + r.b;
+    });
+    return u;
+  }
+
+  /* ---------- state ---------- */
+  function setView(v) {
+    var c = VIEWS[v];
+    S.view = v;
+    S.cfg = c;
+    S.locked = c.locked; S.active = c.active; S.archived = c.archived;
+    S.tsActive = c.ts; S.tsCount = 4; S.tsBusy = false;
+    S.hasBracket = c.hasBracket; S.missing = c.missing ? ["Grøn Hare"] : [];
+    S.servers = ALL_SERVERS.slice(0, c.servers);
+    S.pos = [null].concat(TEAMS.slice(0, 7)).concat([""]);
+    S.created = null; S.count = null; S.game = "cs2-match"; S.busyGuide = false;
+    S.busyRow = -1; S.moveTo = null; S.dlg = null; S.noServers = false;
+    S.manual = [];
+    if (v === "live") S.manual = [{ a: "Kaktus Klan", b: "Lille Ulv", e: null, slot: null, game: null, where: "" }];
+    if (v === "pairs") {
+      S.manual = [
+        { a: "Nordlys", b: "Rød Ugle", e: E(13, 9, 13, false, 1, 4701), slot: null, game: null, where: "Manuel parring" },
+        { a: "Jernbanen", b: "Blå Måge", e: E(3, 2, 2, true, 1, 4702), slot: null, game: null, where: "Manuel parring" },
+        { a: "Sorte Svaner", b: "Lille Ulv", e: E(0, 0, 0, false, 1, 4703), slot: null, game: null, where: "Manuel parring" }
+      ];
+    }
+    if (c.hasBracket) buildSlots(); else S.slots = [];
+    $("#fName").value = c.name;
+    $("#fDate").value = "2026-11-14T18:00";
+    $("#fFormat").value = c.fmt; $("#fMode").value = "standard"; $("#fBracket").value = c.bracket;
+    $("#fFinals").value = String(c.finals);
+    $("#fNotes").value = c.fmt === "none" ? "" : "Husk at medbringe egen strømforlænger";
+    $("#fWelcome").value = "Velkommen til " + c.name + "!";
+    $("#fSku").value = c.fmt === "none" ? "" : "DEMO-TICKET";
+    recordInit();
+    $("#fBracket").disabled = c.fmt === "none"; $("#fFinals").disabled = c.bracket === "none";
+    if ($("#slotDlg").open) $("#slotDlg").close();
+    $$("#stateBtns .btn").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.view === v ? "true" : "false"); });
+    renderAll();
+  }
+
+  var init = {};
+  var FIELDS = ["fName", "fDate", "fFormat", "fMode", "fBracket", "fFinals", "fNotes", "fWelcome", "fSku"];
+  function recordInit() { FIELDS.forEach(function (id) { init[id] = $("#" + id).value; }); updateDirty(); }
+  function updateDirty() { $("#saveBtn").disabled = !FIELDS.some(function (id) { return $("#" + id).value !== init[id]; }); }
+  FIELDS.forEach(function (id) {
+    $("#" + id).addEventListener("input", updateDirty);
+    $("#" + id).addEventListener("change", updateDirty);
+  });
+  $("#fFormat").addEventListener("change", function () {
+    var none = this.value === "none";
+    if (none) $("#fBracket").value = "none";
+    $("#fBracket").disabled = none;
+    $("#fFinals").disabled = none || $("#fBracket").value === "none";
+    updateDirty();
+  });
+  $("#fBracket").addEventListener("change", function () {
+    $("#fFinals").disabled = this.value === "none";
+    updateDirty();
+  });
+  $("#saveBtn").addEventListener("click", function () {
+    if (failNow()) return;
+    recordInit();
+    $("#evTitle").textContent = $("#fName").value;
+    dsToast("Eventet er gemt.", "ok");
+  });
+
+  /* ---------- event header and actions ---------- */
+  function renderEvent() {
+    var c = S.cfg;
+    $("#evTitle").textContent = $("#fName").value || c.name;
+    var k = $("#evKind");
+    k.textContent = c.kind === "lan" ? "LAN" : "Casual";
+    k.className = "badge " + (c.kind === "lan" ? "info" : "muted");
+    $("#evActiveBadge").hidden = !S.active;
+    $("#endBtn").hidden = !S.active;
+    $("#startBtn").hidden = S.active;
+    var slot = $("#archiveSlot");
+    if (S.archived) {
+      slot.innerHTML = '<span class="badge muted">Arkiveret</span><button class="btn ghost" id="unarchiveBtn" type="button">Gendan</button>';
+      $("#unarchiveBtn").addEventListener("click", function () {
+        if (failNow()) return;
+        var b = this; b.disabled = true; b.textContent = "Gendanner…";
+        setTimeout(function () { S.archived = false; renderEvent(); dsToast("Eventet er gendannet fra arkivet.", "ok"); }, 600);
+      });
+    } else {
+      slot.innerHTML = '<button class="btn ghost" id="archiveBtn" type="button"><i class="fa-solid fa-box-archive" aria-hidden="true"></i> Arkiver event</button>';
+      $("#archiveBtn").addEventListener("click", function () {
+        $("#arcTitle").textContent = 'Arkiver "' + $("#fName").value + '"?';
+        dsFieldError($("#arcErrAnchor"), "");
+        $("#arcYes").disabled = false; $("#arcYes").textContent = "Ja, arkiver"; $("#arcNo").disabled = false;
+        $("#archiveDlg").showModal();
+      });
+    }
+    $("#teamsH").textContent = c.fmt !== "none" ? "1. Hold" : "Hold";
+    $("#teamsP").textContent = c.fmt === "tournament" ? "Opret holdene med navn og spillere." :
+      c.fmt === "casual" ? "Skriv spillerne ind, giv dem et niveau, og lad hold-hjælperen fordele dem." :
+      "Vælg en af mulighederne nedenfor, eller tilføj holdene manuelt. Holdets navn (eller gruppe-tag) vises på infoskærmen.";
+    $("#teamBadges").innerHTML = TEAMS.map(function (t) { return '<span class="badge muted">' + esc(t) + "</span>"; }).join("");
+    $("#seedBadge").textContent = S.hasBracket && S.slots.length ? "Seedet, låst til bracketen" : "Seedet";
+  }
+  $("#startBtn").addEventListener("click", function () {
+    if (failNow()) return;
+    S.active = true; renderEvent(); dsToast("Eventet er startet og vises som velkomst på forsiden.", "ok");
+  });
+  $("#endBtn").addEventListener("click", function () {
+    if (failNow()) return;
+    S.active = false; renderEvent(); dsToast("Eventet er afsluttet.", "info");
+  });
+  $("#delEventBtn").addEventListener("click", function () {
+    dsConfirm('Slet eventet "' + $("#fName").value + '" (inkl. hold og kampe)?', "Slet event", true, function () {
+      if (failNow()) return;
+      dsToast("Eventet er slettet (kun en demo her).", "warn");
+    });
+  });
+  $("#backBtn").addEventListener("click", function () { dsToast("Tilbage til listen over events.", "info"); });
+  $("#infoLink").addEventListener("click", function (e) { e.preventDefault(); dsToast("Infoskærmen åbnes i en ny fane.", "info"); });
+
+  /* archive dialog */
+  $("#arcNo").addEventListener("click", function () { $("#archiveDlg").close(); });
+  $("#arcYes").addEventListener("click", function () {
+    var y = this;
+    if (S.fail) {
+      S.fail = false; $("#failBox").checked = false;
+      dsFieldError($("#arcErrAnchor"), "Kunne ikke arkivere eventet. Prøv igen om lidt.");
+      return;
+    }
+    y.disabled = true; y.textContent = "Arkiverer…"; $("#arcNo").disabled = true;
+    setTimeout(function () {
+      S.archived = true; S.active = false; S.tsActive = false;
+      $("#archiveDlg").close();
+      renderEvent(); renderTS();
+      dsToast("Eventet er arkiveret, og automatisk flytning er slået fra.", "ok");
+    }, 700);
+  });
+
+  /* ---------- TeamSpeak actions ---------- */
+  function renderTS() {
+    var cr = $("#tsCreate"), mv = $("#tsMove"), bd = $("#tsBadge");
+    cr.disabled = S.tsBusy; $("span", cr).textContent = S.tsBusy ? "Arbejder…" : "Opret TeamSpeak-kanaler";
+    mv.disabled = S.tsBusy;
+    mv.className = "btn ts-toggle " + (S.tsActive ? "danger" : "ghost");
+    mv.textContent = S.tsActive ? "Stop automatisk flytning" : "Aktiver automatisk flytning";
+    bd.textContent = "Automatisk flytning aktiv (" + S.tsCount + " maskine" + (S.tsCount === 1 ? "" : "r") + ")";
+    bd.className = "badge ok" + (S.tsActive ? "" : " invisible");
+    bd.setAttribute("aria-hidden", S.tsActive ? "false" : "true");
+  }
+  function tsRun(fn) {
+    if (failNow()) return;
+    S.tsBusy = true; renderTS();
+    setTimeout(function () { S.tsBusy = false; fn(); renderTS(); }, 700);
+  }
+  function tsActivate() {
+    S.tsActive = true;
+    dsToast("Flyttede " + S.tsCount + " bruger(e) - automatisk flytning er nu aktiv.", "ok");
+  }
+  $("#tsCreate").addEventListener("click", function () {
+    tsRun(function () {
+      dsToast("TeamSpeak-kanaler oprettet under 'Event'.", "ok");
+      dsConfirm("Det ligner at dine hold er PC-Grupper. Skal jeg flytte brugerne og aktivere automatisk flytning?", "Ja, flyt brugerne", false, function () {
+        tsActivate(); renderTS();
+      });
+    });
+  });
+  $("#tsMove").addEventListener("click", function () {
+    if (S.tsActive) {
+      dsConfirm("Slå automatisk flytning fra? Brugere flyttes ikke længere tilbage til deres hold-kanal.", "Slå fra", true, function () {
+        tsRun(function () { S.tsActive = false; dsToast("Automatisk flytning er slået fra.", "info"); });
+      });
+    } else {
+      tsRun(tsActivate);
+    }
+  });
+
+  /* ---------- bracket panel ---------- */
+  function teamRow(s, side) {
+    var id = s[side], seed = s[side + "s"], cls = ["bracket-team"], attrs = "";
+    var score = s.bo3 ? (s.a && s.b ? (side === "a" ? s.wa : s.wb) : null) : (s.e ? (side === "a" ? s.e.sa : s.e.sb) : null);
+    if (s.win) cls.push(id !== "" && s.win === side ? "is-winner" : "is-loser");
+    var r1 = s.round === 1 && !S.locked;
+    if (r1 && id) { cls.push("is-draggable"); attrs = ' draggable="true" data-pos="' + seed + '"'; }
+    else if (r1 && !id && seed > 0) { attrs = ' data-pos="' + seed + '"'; }
+    return '<div class="' + cls.join(" ") + '"' + attrs + ">" +
+      '<span class="bracket-seed">' + (seed > 0 ? seed : "") + "</span>" +
+      (id ? '<span class="bracket-name" title="' + esc(id) + '">' + esc(id) + "</span>"
+          : '<span class="bracket-name muted">' + (s.bye ? "Bye" : "Afventer") + "</span>") +
+      (score !== null ? '<span class="bracket-score">' + score + "</span>" : "") + "</div>";
+  }
+  function slotBox(s, link, hasPrev) {
+    var clickable = S.locked && !s.bye;
+    var live = s.e && s.e.live;
+    var cls = ["bracket-slot"];
+    if (live) cls.push("is-live");
+    if (S.dlg === s) cls.push("is-selected");
+    if (clickable) cls.push("is-clickable");
+    var cc = ["bracket-cell"];
+    if (link !== "none") { cc.push("has-next", "link-" + link); }
+    if (hasPrev) cc.push("has-prev");
+    return '<div class="' + cc.join(" ") + '">' +
+      (link === "up" || link === "down" ? '<span class="bracket-join"></span>' : "") +
+      '<div class="' + cls.join(" ") + '" data-slot="' + s.id + '"' + (clickable ? ' role="button" tabindex="0"' : "") + ">" +
+      (s.bo3 ? '<span class="bracket-bo3">BO3</span>' : "") +
+      (live ? '<span class="bracket-live">LIVE</span>' : "") +
+      teamRow(s, "a") + teamRow(s, "b") +
+      (s.e && s.e.host ? '<div class="bracket-server" title="' + esc(s.e.host) + '"><i class="fa-solid fa-server" aria-hidden="true"></i> <span>' + esc(s.e.host) + "</span></div>" : "") +
+      "</div></div>";
+  }
+  function bracketHtml() {
+    var rounds = [1, 2, 3], counts = { 1: 4, 2: 2, 3: 1 };
+    var champ = S.slots[6].win ? winner(S.slots[6]).n : "";
+    var cols = rounds.map(function (r) {
+      var cells = S.slots.filter(function (s) { return s.round === r; }).map(function (s) {
+        var link = r >= 3 ? "none" : (counts[r + 1] === counts[r] ? "straight" : (s.idx % 2 === 0 ? "down" : "up"));
+        return slotBox(s, link, r > 1);
+      }).join("");
+      return '<div class="bracket-round"><div class="bracket-round-title">' + roundTitle(r) + '</div><div class="bracket-round-slots">' + cells + "</div></div>";
+    }).join("");
+    return '<div class="bracket-scroll"><div class="bracket">' +
+      (champ ? '<div class="bracket-champion"><i class="fa-solid fa-trophy" aria-hidden="true"></i> Vinder: ' + esc(champ) + "</div>" : "") +
+      '<div class="bracket-rounds">' + cols + "</div></div></div>";
+  }
+  function renderPanel() {
+    var el = $("#bracketPanel");
+    if (!S.slots.length) {
+      el.innerHTML = '<div class="card">' +
+        '<p class="muted">Lav bracketen når holdene er klar.</p>' +
+        '<div class="row wrap"><button class="btn primary" id="makeBracket">Lav bracket</button></div></div>';
+      $("#timeCard").hidden = true; $("#guideSlot").hidden = true;
+      return;
+    }
+    $("#timeCard").hidden = false; $("#guideSlot").hidden = false;
+    var h = "";
+    if (S.missing.length) {
+      h += '<div class="alert warn">' + S.missing.length + " hold er ikke med i bracketen: " + esc(S.missing.join(", ")) + ". Slet og lav bracketen igen for at få dem med.</div>";
+    }
+    h += bracketHtml();
+    if (S.locked) {
+      h += '<div class="card bracket-bar"><span class="grow bracket-bar-text muted">Bracketen er låst.</span>' +
+        '<button class="btn ghost" id="unlockBtn"><i class="fa-solid fa-lock-open" aria-hidden="true"></i> Lås op</button>' +
+        '<button class="btn ghost danger" id="delBracket"><i class="fa-solid fa-trash" aria-hidden="true"></i> Slet bracket</button></div>';
+    } else {
+      h += '<div class="alert warn bracket-bar"><span class="grow bracket-bar-text"><b>Bracketen er ikke låst endnu.</b> Træk hold rundt i første runde, og tryk på Lås bracket når den er klar. Først derefter kan du sætte vindere og oprette kampe.</span>' +
+        '<button class="btn primary" id="lockBtn"><i class="fa-solid fa-lock" aria-hidden="true"></i> Lås bracket</button>' +
+        '<button class="btn ghost danger" id="delBracket"><i class="fa-solid fa-trash" aria-hidden="true"></i> Slet bracket</button></div>';
+    }
+    el.innerHTML = h;
+  }
+  $("#bracketPanel").addEventListener("click", function (e) {
+    var t = e.target.closest("button, [data-slot]");
+    if (!t) return;
+    if (t.id === "lockBtn") { if (failNow()) return; S.locked = true; renderAll(); dsToast("Bracketen er låst.", "ok"); }
+    else if (t.id === "unlockBtn") { if (failNow()) return; S.locked = false; renderAll(); dsToast("Bracketen er låst op.", "info"); }
+    else if (t.id === "delBracket") {
+      dsConfirm("Slet bracketen? Kampene i eBot bliver ikke slettet.", "Slet bracket", true, function () {
+        if (failNow()) return;
+        S.slots = []; S.dlg = null; renderAll(); dsToast("Bracketen er slettet.", "warn");
+      });
+    }
+    else if (t.id === "makeBracket") {
+      if (failNow()) return;
+      S.pos = [null].concat(TEAMS); S.missing = []; S.locked = false; S.view = "pre";
+      buildSlots(); renderAll(); dsToast("Bracketen er lavet med alle 8 hold.", "ok");
+    }
+    else if (t.dataset && t.dataset.slot) {
+      var s = S.slots.filter(function (x) { return x.id === t.dataset.slot; })[0];
+      if (s && S.locked && !s.bye) openSlot(s);
+    }
+  });
+  $("#bracketPanel").addEventListener("keydown", function (e) {
+    if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.slot) { e.preventDefault(); e.target.click(); }
+  });
+
+  /* drag and drop in round 1 (before the lock) */
+  var dragPos = null;
+  var panel = $("#bracketPanel");
+  panel.addEventListener("dragstart", function (e) {
+    var t = e.target.closest && e.target.closest(".bracket-team[data-pos]");
+    if (!t || !t.classList.contains("is-draggable")) return;
+    dragPos = Number(t.dataset.pos);
+    e.dataTransfer.setData("text/plain", String(dragPos)); e.dataTransfer.effectAllowed = "move";
+    t.classList.add("is-dragging");
+  });
+  panel.addEventListener("dragend", function (e) {
+    var t = e.target.closest && e.target.closest(".bracket-team"); if (t) t.classList.remove("is-dragging");
+    $$(".is-drop", panel).forEach(function (x) { x.classList.remove("is-drop"); });
+  });
+  panel.addEventListener("dragover", function (e) {
+    var t = e.target.closest && e.target.closest(".bracket-team[data-pos]");
+    if (!t || dragPos === null) return;
+    e.preventDefault(); t.classList.add("is-drop");
+  });
+  panel.addEventListener("dragleave", function (e) {
+    var t = e.target.closest && e.target.closest(".bracket-team"); if (t) t.classList.remove("is-drop");
+  });
+  panel.addEventListener("drop", function (e) {
+    var t = e.target.closest && e.target.closest(".bracket-team[data-pos]");
+    if (!t || dragPos === null) return;
+    e.preventDefault();
+    var to = Number(t.dataset.pos), from = dragPos; dragPos = null;
+    if (from === to) return;
+    if (failNow()) return;
+    var tmp = S.pos[from]; S.pos[from] = S.pos[to]; S.pos[to] = tmp;
+    buildSlots(); renderAll();
+    dsToast("Hold byttet i bracketen.", "ok");
+  });
+
+  /* ---------- server guide ---------- */
+  function nextNumber(prefix) {
+    var max = 0;
+    S.servers.forEach(function (s) {
+      if (s.host.indexOf(prefix + " #") === 0) { var n = Number(s.host.slice(prefix.length + 2)); if (n > max) max = n; }
+    });
+    return max + 1;
+  }
+  function renderGuide() {
+    var host = $("#guideSlot");
+    var type = SERVER_TYPES.filter(function (t) { return t.game === S.game; })[0];
+    var ofType = S.servers.filter(function (s) { return s.game === type.game; });
+    var ready = ofType.length, usage = usageMap();
+    var free = ofType.filter(function (s) { return !usage[s.id]; }).length;
+    var missing = Math.max(0, NEEDED - ready);
+    var n = S.count == null ? Math.max(1, missing) : S.count;
+    var registered = {}; S.servers.forEach(function (s) { registered[s.host] = true; });
+    var waiting = S.created ? S.created.filter(function (r) { return !r.error && !registered[r.name]; }).length : 0;
+    var pct = Math.min(100, Math.round(ready / NEEDED * 100));
+    var h = '<div class="card stack">' +
+      '<div class="row wrap"><h3><i class="fa-solid fa-server" aria-hidden="true"></i> Servere til bracketen</h3><div class="spacer"></div>' +
+      '<span class="badge ' + (missing === 0 ? "ok" : "info") + '">' + ready + " af " + NEEDED + " klar</span>" +
+      (ready > 0 ? '<span class="badge ' + (free > 0 ? "ok" : "muted") + '">' + free + " af " + ready + " ledige</span>" : "") + "</div>" +
+      '<p class="muted small">Op til ' + NEEDED + " kampe kan køre samtidig, så du skal bruge " + NEEDED + " servere.</p>" +
+      '<div class="srv-progress" aria-hidden="true"><div style="width:' + pct + '%"></div></div>';
+    if (missing === 0) {
+      h += '<div class="success">Alle servere er klar. Du vælger server, når du opretter kampen.</div>';
+    } else if (S.perm) {
+      h += '<div class="stack" style="gap:10px"><div class="row wrap">' +
+        '<label>1. Type<select id="gType">' + SERVER_TYPES.map(function (t) {
+          return '<option value="' + t.game + '"' + (t.game === S.game ? " selected" : "") + ">" + t.label + "</option>";
+        }).join("") + "</select></label>" +
+        '<label>2. Antal<input type="number" id="gCount" min="1" max="32" value="' + n + '" style="width:80px"></label>' +
+        '<div class="stack" style="gap:4px;justify-content:flex-end"><span class="muted small">3. Opret</span>' +
+        '<button class="btn primary" id="gCreate"' + (S.busyGuide ? " disabled" : "") + ">" + (S.busyGuide ? "Opretter…" : "Opret " + n + " server" + (n === 1 ? "" : "e")) + "</button></div>" +
+        "</div>" +
+        '<span class="muted small">Du mangler ' + missing + " " + type.label.toLowerCase() + ". Serverne hedder " + type.prefix + " #" + nextNumber(type.prefix) + " og opefter.</span></div>";
+    } else {
+      h += '<div class="warn">Der mangler ' + missing + " server" + (missing === 1 ? "" : "e") + ". Bed en admin om at oprette dem.</div>";
+    }
+    if (S.created) {
+      h += '<div class="stack" style="gap:6px"><b class="small">' +
+        (waiting > 0 ? "4. Vent lidt - " + waiting + " server" + (waiting === 1 ? "" : "e") + " starter (ca. 1-2 minutter)" : "Alle de nye servere er klar") +
+        '</b><div class="toolbar">' + S.created.map(function (r) {
+          return r.error ? '<span class="badge err" title="' + esc(r.error) + '">' + esc(r.name) + " fejlede</span>"
+            : registered[r.name] ? '<span class="badge ok">' + esc(r.name) + ' <i class="fa-solid fa-check" aria-hidden="true"></i></span>'
+            : '<span class="badge info">' + esc(r.name) + ' <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i></span>';
+        }).join("") + "</div></div>";
+    }
+    h += "</div>";
+    host.innerHTML = h;
+  }
+  $("#guideSlot").addEventListener("change", function (e) {
+    if (e.target.id === "gType") { S.game = e.target.value; S.count = null; renderGuide(); }
+    if (e.target.id === "gCount") { S.count = Math.min(32, Math.max(1, Number(e.target.value) || 1)); renderGuide(); }
+  });
+  $("#guideSlot").addEventListener("input", function (e) {
+    if (e.target.id === "gCount") {
+      var n = Math.min(32, Math.max(1, Number(e.target.value) || 1));
+      $("#gCreate").textContent = "Opret " + n + " server" + (n === 1 ? "" : "e");
+    }
+  });
+  $("#guideSlot").addEventListener("click", function (e) {
+    if (e.target.id !== "gCreate") return;
+    if (failNow()) return;
+    var type = SERVER_TYPES.filter(function (t) { return t.game === S.game; })[0];
+    var ofType = S.servers.filter(function (s) { return s.game === type.game; });
+    var n = S.count == null ? Math.max(1, NEEDED - ofType.length) : S.count;
+    S.busyGuide = true; renderGuide();
+    setTimeout(function () {
+      var start = nextNumber(type.prefix);
+      S.created = [];
+      for (var i = 0; i < n; i++) {
+        S.created.push({ name: type.prefix + " #" + (start + i), error: (n >= 3 && i === n - 1) ? "Kunne ikke oprette serveren" : null });
+      }
+      S.busyGuide = false; S.count = null; renderGuide();
+      var game = type.game, made = S.created.slice();
+      setTimeout(function () {
+        made.forEach(function (r) {
+          if (!r.error && !S.servers.some(function (s) { return s.host === r.name; })) {
+            S.servers.push({ id: S.servers.length + 1, host: r.name, ip: "192.0.2." + (20 + S.servers.length) + ":27015", game: game });
+          }
+        });
+        renderGuide();
+        dsToast("De nye servere er klar.", "ok");
+      }, 3500);
+    }, 700);
+  });
+  $("#permBox").addEventListener("change", function () { S.perm = !this.checked; renderGuide(); });
+
+  /* ---------- matches table ---------- */
+  function renderMatches() {
+    var rows = matchRows(), tb = $("#matchTable tbody");
+    if (!rows.length) {
+      tb.innerHTML = '<tr><td colspan="7" class="muted">Ingen kampe endnu.</td></tr>';
+      return;
+    }
+    tb.innerHTML = rows.map(function (r, i) {
+      var e = r.e, h = "";
+      var detail = !!e && !e.missing;
+      h += '<tr' + (detail ? ' class="clickable" data-i="' + i + '"' : "") + ">";
+      h += '<td class="chev">' + (detail ? '<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>' : "") + "</td>";
+      h += '<td class="team-pair">' + esc(r.a) + " vs " + esc(r.b) + "</td>";
+      h += '<td class="muted">' + (r.slot && r.slot.bo3 ? "Kamp 5v5" : "Kamp 5v5") + "</td>";
+      h += '<td class="mono">' + (e ? esc(e.host) + " (" + esc(e.ip) + ")" : "-") + "</td>";
+      h += "<td>" + (e && !e.missing ? '<span class="badge ' + (e.live ? "ok" : "muted") + '">' + statusText(e.status, e.live) + "</span>" : '<span class="badge muted">eBot-kamp mangler</span>') + "</td>";
+      h += '<td class="mono">' + (e && !e.missing ? e.sa + ":" + e.sb : "-") + "</td>";
+      h += '<td class="row">' + rowActions(r, i) + "</td></tr>";
+      if (detail) {
+        h += '<tr class="rowdetail" hidden><td></td><td colspan="6"><div class="rowdetail-grid">' +
+          "<span><span class='muted'>eBot-kamp</span> #" + e.id + "</span>" +
+          "<span><span class='muted'>Map</span> " + MAPS[e.id % 5] + "</span>" +
+          "<span><span class='muted'>Oprettet</span> " + e.created + "</span>" +
+          (r.where ? "<span><span class='muted'>Bracket</span> " + esc(r.where) + "</span>" : "") +
+          "</div></td></tr>";
+      }
+      return h;
+    }).join("");
+  }
+  function rowActions(r, i) {
+    if (S.busyRow === i) return '<span class="muted small">Arbejder…</span>';
+    var e = r.e, live = !!e && !e.missing && e.live, stopped = !!e && !e.missing && !e.live && e.status >= 1 && e.status <= 12;
+    var h = "";
+    if (e && !e.missing && e.status === 0) h += '<button class="btn ghost sm" data-ra="start" data-i="' + i + '">Start</button>';
+    if (live || stopped) h += '<button class="btn ghost sm" data-ra="restart" data-i="' + i + '" title="Stopper kampen, nulstiller scoren og starter den igen på samme server">Genstart</button>';
+    if (live) h += '<button class="btn ghost sm" data-ra="stop" data-i="' + i + '" title="Stopper kampen på serveren. Den kan startes igen bagefter.">Stop</button>';
+    h += '<button class="btn ghost sm danger" data-ra="del" data-i="' + i + '">Slet</button>';
+    return h;
+  }
+  dsRowClick($("#matchTable tbody"), function (tr) {
+    var d = tr.nextElementSibling;
+    var open = tr.classList.toggle("open");
+    if (d && d.classList.contains("rowdetail")) d.hidden = !open;
+  });
+  function unlinkRow(r) {
+    if (r.slot) {
+      if (r.game) { r.game.matchId = false; r.game.e = null; r.game.w = ""; var wa = 0, wb = 0; r.slot.games.forEach(function (g) { if (g.w === "a") wa++; if (g.w === "b") wb++; }); r.slot.wa = wa; r.slot.wb = wb; if (wa < 2 && wb < 2) r.slot.win = ""; var last = r.slot.games.filter(function (g) { return g.e; }).pop(); r.slot.e = last ? last.e : null; r.slot.linked = !!last; }
+      else { r.slot.e = null; r.slot.linked = false; }
+      propagate();
+    } else {
+      S.manual.splice(S.manual.indexOf(r), 1);
+    }
+  }
+  $("#matchTable tbody").addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-ra]"); if (!b) return;
+    var r = matchRows()[Number(b.dataset.i)], e = r.e, i = Number(b.dataset.i), a = b.dataset.ra;
+    var label = r.a + " vs " + r.b;
+    function run(fn, msg, kind) {
+      if (failNow()) return;
+      S.busyRow = i; renderMatches();
+      setTimeout(function () { S.busyRow = -1; fn(); renderAll(); dsToast(msg, kind || "ok"); }, 700);
+    }
+    if (a === "start") run(function () { e.status = 1; e.live = true; }, "Kampen er startet.");
+    if (a === "restart") dsConfirm("Genstart " + label + "? Scoren nulstilles.", "Genstart", false, function () {
+      run(function () { e.status = 1; e.live = true; e.sa = 0; e.sb = 0; }, "Kampen er genstartet.");
+    });
+    if (a === "stop") dsConfirm("Stop " + label + "?", "Stop kamp", false, function () {
+      run(function () { e.live = false; }, "Kampen er stoppet.", "info");
+    });
+    if (a === "del") {
+      var live = e && !e.missing && e.live;
+      dsConfirm(live ? "Stop og slet " + label + "? Kampen afbrydes på serveren." : "Slet kampen " + label + "?", "Slet", true, function () {
+        run(function () { unlinkRow(r); }, "Kampen er slettet.", "warn");
+      });
+    }
+  });
+
+  /* ---------- manual pairing form (events without a bracket) ---------- */
+  function renderPair() {
+    var f = $("#pairForm");
+    f.hidden = S.hasBracket;
+    if (S.hasBracket) return;
+    var a = $("#pA").value;
+    $("#pA").innerHTML = '<option value="">Vælg…</option>' + TEAMS.map(function (t) { return "<option" + (t === a ? " selected" : "") + ">" + t + "</option>"; }).join("");
+    var b = $("#pB").value;
+    $("#pB").innerHTML = '<option value="">Vælg…</option>' + TEAMS.filter(function (t) { return t !== $("#pA").value; }).map(function (t) { return "<option" + (t === b ? " selected" : "") + ">" + t + "</option>"; }).join("");
+    $("#pS").innerHTML = '<option value="">Vælg server…</option>' + S.servers.map(function (s) { return '<option value="' + s.id + '">' + esc(s.host) + "</option>"; }).join("");
+    pairValid();
+  }
+  function pairValid() { $("#pGo").disabled = !($("#pA").value && $("#pB").value && $("#pS").value); }
+  ["pA", "pB", "pS"].forEach(function (id) {
+    $("#" + id).addEventListener("change", function () { if (id === "pA") { $("#pB").value = ""; renderPair(); } pairValid(); });
+  });
+  $("#pairReload").addEventListener("click", function () { dsToast("Servere genindlæst.", "info"); });
+  $("#pairForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var sid = Number($("#pS").value), u = usageMap();
+    if (u[sid]) { dsFieldError($("#pS"), "Serveren bruges af en anden kamp. Vælg en ledig server."); return; }
+    dsFieldError($("#pS"), "");
+    if (failNow()) return;
+    var go = $("#pGo"); go.disabled = true; go.textContent = "Opretter…";
+    setTimeout(function () {
+      var id = 4710 + S.manual.length;
+      var e = E(0, 0, $("#pStart").checked ? 1 : 0, $("#pStart").checked, sid, id);
+      S.manual.push({ a: $("#pA").value, b: $("#pB").value, e: e, slot: null, game: null, where: "Manuel parring" });
+      $("#pA").value = ""; $("#pB").value = ""; $("#pStart").checked = false;
+      go.textContent = "Opret kamp";
+      renderAll(); dsToast("Kampen er oprettet i eBot.", "ok");
+    }, 700);
+  });
+
+  /* ---------- bracket dialog ---------- */
+  var dlg = $("#slotDlg");
+  function pickable() { return S.noServers ? [] : S.servers; }
+  function serverOptions(selected) {
+    var u = usageMap();
+    return pickable().map(function (s) {
+      return '<option value="' + s.id + '"' + (String(selected) === String(s.id) ? " selected" : "") + ">" + esc(s.host) + (u[s.id] ? " - " + esc(u[s.id]) : "") + "</option>";
+    }).join("");
+  }
+  function firstFree() {
+    var u = usageMap(), f = pickable().filter(function (s) { return !u[s.id]; })[0];
+    return f ? f.id : "";
+  }
+  function slotNameOf(s, side) { return side === "a" ? s.a : s.b; }
+
+  function dlgHtml(s) {
+    var ready = !s.bye && !!s.a && !!s.b, bo3 = s.bo3, e = s.e;
+    var missing = !!(e && e.missing), linked = !!s.linked && !!e;
+    var games = s.games || [];
+    var tied = !!(games[0] && games[1] && games[0].w && games[1].w && games[0].w !== games[1].w);
+    var shown = games.filter(function (g) { return g.i < 2 || tied || g.w || g.matchId; });
+    var nextGame = bo3 && !s.win ? shown.filter(function (g) { return !g.w; })[0] : undefined;
+    var lastDecided = -1; games.forEach(function (g) { if (g.w) lastDecided = g.i; });
+    var bo1Side = bo3 || missing ? "" : ebotWinner(e);
+    var canCreate = bo3 ? (!!nextGame && (!nextGame.matchId || !!(nextGame.e && nextGame.e.missing))) : ((!s.linked || missing) && !s.win);
+    var h = "";
+
+    if (bo3) {
+      h += "<div><b>" + s.wa + " - " + s.wb + '</b> <span class="muted small">BO3' + (s.win ? ", " + esc(slotNameOf(s, s.win)) + " vandt" : "") + "</span></div>";
+      h += '<div class="slot-maps">' + shown.map(function (g) {
+        var n = g.i + 1, ge = g.e, eb = ebotWinner(ge), current = nextGame && nextGame.i === g.i;
+        var x = '<div class="slot-map' + (current ? " is-current" : "") + '"><div class="slot-map-head"><b>Map ' + n + "</b>";
+        if (ge && ge.missing) x += '<span class="warn small">Mangler i eBot</span>';
+        if (ge && !ge.missing) x += "<span>" + ge.sa + " - " + ge.sb + ' <span class="muted small">' + statusText(ge.status, ge.live) + "</span></span>";
+        if (g.w) x += '<span class="badge ok">' + esc(slotNameOf(s, g.w)) + " vandt</span>";
+        else if (!ge && !current) x += '<span class="muted small">Venter</span>';
+        x += "</div>";
+        if (ready && (current || g.i === lastDecided)) {
+          x += '<div class="row wrap" style="gap:8px">';
+          if (current) {
+            x += '<button class="btn sm" data-act="gwin" data-game="' + g.i + '" data-side="a">' + esc(s.a) + " vandt map " + n + "</button>";
+            x += '<button class="btn sm" data-act="gwin" data-game="' + g.i + '" data-side="b">' + esc(s.b) + " vandt map " + n + "</button>";
+          }
+          if (eb && eb !== g.w) x += '<button class="btn ghost sm" data-act="gwin" data-game="' + g.i + '" data-side="' + eb + '" title="Kun et forslag. Tjek at spillerne sad på de rigtige hold."><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> eBot foreslår ' + esc(slotNameOf(s, eb)) + "</button>";
+          if (g.w) x += '<button class="btn ghost sm" data-act="gwin" data-game="' + g.i + '" data-side="">Nulstil</button>';
+          x += "</div>";
+        }
+        return x + "</div>";
+      }).join("") + "</div>";
+    } else if (e && !missing) {
+      h += "<div><b>" + e.sa + " - " + e.sb + '</b> <span class="muted small">' + statusText(e.status, e.live) + "</span>" +
+        (bo1Side ? '<div class="muted small">eBot foreslår: ' + esc(slotNameOf(s, bo1Side)) + "</div>" : "") + "</div>";
+    }
+
+    if (linked || (ready && canCreate)) {
+      h += '<div class="slot-ebot"><div class="slot-ebot-head"><b>eBot</b>';
+      if (!linked) h += '<span class="muted small">' + (bo3 && nextGame ? "Map " + (nextGame.i + 1) + " er ikke oprettet endnu" : "Ingen kamp oprettet endnu") + "</span>";
+      else if (missing) h += '<span class="warn small">Kampen findes ikke længere i eBot</span>';
+      else h += '<span class="muted small">Kamp #' + e.id + (e.host ? " · " + esc(e.host) : "") + " · " + statusText(e.status, e.live) + "</span>";
+      h += "</div>";
+      if (linked) {
+        if (missing) {
+          h += '<div class="row wrap"><span class="muted small">Opret den igen, eller fjern koblingen.</span><button class="btn ghost sm" data-act="delete">Fjern kobling</button></div>';
+        } else {
+          h += '<div class="row wrap">';
+          if (e.status === 0) h += '<button class="btn primary sm" data-act="start"><i class="fa-solid fa-play" aria-hidden="true"></i> Start kamp</button>';
+          if (e.live) h += '<button class="btn sm" data-act="stop"><i class="fa-solid fa-stop" aria-hidden="true"></i> Stop kamp</button>';
+          if (e.status < 13 && S.moveTo === null) h += '<button class="btn ghost sm" data-act="move-open"' + (e.live ? ' disabled title="Stop kampen først"' : "") + '><i class="fa-solid fa-right-left" aria-hidden="true"></i> Skift server</button>';
+          h += '<button class="btn ghost danger sm" data-act="delete"><i class="fa-solid fa-trash" aria-hidden="true"></i> ' + (e.status >= 13 ? "Fjern kamp" : "Slet i eBot") + "</button></div>";
+          if (S.moveTo !== null) {
+            h += '<div class="row wrap"><select id="moveSel" class="slot-server-select"><option value="">Vælg server…</option>' + serverOptions(S.moveTo) + "</select>" +
+              '<button class="btn primary sm" data-act="move-do">Flyt</button><button class="btn ghost sm" data-act="move-cancel">Fortryd</button></div>';
+          }
+        }
+      }
+      if (ready && canCreate) {
+        h += '<form class="slot-ebot-form" id="slotForm"><div class="grid2">' +
+          '<label>Map<select id="cMap" required>' + MAPS.map(function (m) { return "<option>" + m + "</option>"; }).join("") + "</select></label>" +
+          '<label>Server<select id="cSrv" ' + (pickable().length === 0 ? "disabled" : "") + " required><option value=\"\">" + (pickable().length === 0 ? "Ingen servere klar" : "Vælg server…") + "</option>" + serverOptions(firstFree()) + "</select></label></div>";
+        if (pickable().length === 0) h += '<span class="muted small">Opret servere under Servere til bracketen.</span>';
+        h += '<div class="row wrap"><label class="switch"><input type="checkbox" id="cStart"> Start med det samme</label>' +
+          '<button class="btn primary sm" id="cGo"' + (pickable().length === 0 ? " disabled" : "") + ">" + (bo3 && nextGame ? "Opret map " + (nextGame.i + 1) + " i eBot" : "Opret kamp i eBot") + "</button></div></form>";
+      }
+      h += "</div>";
+    }
+
+    if (ready && !bo3) {
+      h += '<div class="row wrap" style="gap:8px">' +
+        '<button class="btn' + (s.win === "a" ? " primary" : "") + '" data-act="win" data-side="a">' + esc(s.a) + " vandt</button>" +
+        '<button class="btn' + (s.win === "b" ? " primary" : "") + '" data-act="win" data-side="b">' + esc(s.b) + " vandt</button>";
+      if (bo1Side && bo1Side !== s.win) h += '<button class="btn ghost" data-act="win" data-side="' + bo1Side + '" title="Kun et forslag. Tjek at spillerne sad på de rigtige hold."><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> eBot foreslår ' + esc(slotNameOf(s, bo1Side)) + "</button>";
+      if (s.win) h += '<button class="btn ghost" data-act="win" data-side="">Nulstil vinder</button>';
+      h += "</div>";
+    }
+    h += '<div class="row" id="slotFoot"><button class="btn ghost" data-act="close">Luk</button></div>';
+    return h;
+  }
+  function renderDlg() {
+    var s = S.dlg; if (!s) return;
+    $("#slotTitle").textContent = (s.a || "Afventer") + " vs " + (s.b || "Afventer");
+    $("#slotBody").innerHTML = dlgHtml(s);
+  }
+  function openSlot(s) {
+    S.dlg = s; S.moveTo = null; renderDlg(); renderPanel();
+    if (!dlg.open) dlg.showModal();
+  }
+  dlg.addEventListener("close", function () { S.dlg = null; S.moveTo = null; S.noServers = false; renderPanel(); });
+
+  function refresh() { propagate(); renderDlg(); renderAll(); }
+  function gameOf(s, i) { return s.games.filter(function (g) { return g.i === i; })[0]; }
+  function recount(s) {
+    var wa = 0, wb = 0; s.games.forEach(function (g) { if (g.w === "a") wa++; if (g.w === "b") wb++; });
+    s.wa = wa; s.wb = wb; s.win = wa >= 2 ? "a" : wb >= 2 ? "b" : "";
+    if (s.win === "" && s.games.length > 2 && wa < 2 && wb < 2 && !(s.games[0].w && s.games[1].w && s.games[0].w !== s.games[1].w)) s.games = s.games.slice(0, 2);
+  }
+  dlg.addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-act]");
+    if (!b || b.disabled) return;
+    var s = S.dlg, a = b.dataset.act, e = s && s.e;
+    if (a === "close") { dlg.close(); return; }
+    if (a === "move-cancel") { S.moveTo = null; renderDlg(); return; }
+    if (a === "move-open") { S.moveTo = String(firstFree()); renderDlg(); return; }
+    if (failNow()) return;
+    if (a === "start") { e.status = 1; e.live = true; refresh(); dsToast("Kampen er startet.", "ok"); }
+    else if (a === "stop") {
+      dsConfirm("Stop " + s.a + " vs " + s.b + "?", "Stop kamp", false, function () { e.live = false; refresh(); dsToast("Kampen er stoppet.", "info"); });
+    }
+    else if (a === "move-do") {
+      var sel = $("#moveSel").value; if (!sel) { dsFieldError($("#moveSel"), "Vælg en server."); return; }
+      dsFieldError($("#moveSel"), "");
+      var go = function () {
+        var t = srv(Number(sel)); e.sid = t.id; e.host = t.host; e.ip = t.ip;
+        if (e.status !== 0) { e.status = 0; e.live = false; e.sa = 0; e.sb = 0; }
+        S.moveTo = null; refresh(); dsToast("Kampen er flyttet til " + t.host + ".", "ok");
+      };
+      if (e.status !== 0) dsConfirm("Kampen nulstilles, før den flyttes. Fortsæt?", "Flyt kampen", false, go); else go();
+    }
+    else if (a === "delete") {
+      var q = e.missing ? "Fjern koblingen til kampen?" : e.status >= 13 ? "Fjern kampen fra bracketen? Resultatet i eBot bliver liggende." : e.live ? "Stop og slet kampen i eBot?" : "Slet kampen i eBot?";
+      dsConfirm(q, e.missing ? "Fjern kobling" : e.status >= 13 ? "Fjern kamp" : "Slet kampen", true, function () {
+        var g = s.bo3 ? s.games.filter(function (x) { return x.e === e; })[0] : null;
+        if (g) { g.matchId = false; g.e = null; }
+        var last = s.bo3 ? s.games.filter(function (x) { return x.e; }).pop() : null;
+        s.e = last ? last.e : null; s.linked = !!last;
+        S.moveTo = null; refresh(); dsToast(e.missing ? "Koblingen er fjernet." : "Kampen er fjernet.", "warn");
+      });
+    }
+    else if (a === "win") { s.win = b.dataset.side; refresh(); dsToast(s.win ? slotNameOf(s, s.win) + " er sat som vinder." : "Vinderen er nulstillet.", s.win ? "ok" : "info"); }
+    else if (a === "gwin") {
+      var g2 = gameOf(s, Number(b.dataset.game)); g2.w = b.dataset.side;
+      recount(s);
+      refresh(); dsToast(g2.w ? "Map " + (g2.i + 1) + ": " + slotNameOf(s, g2.w) + " vandt." : "Map " + (g2.i + 1) + " er nulstillet.", g2.w ? "ok" : "info");
+    }
+  });
+  dlg.addEventListener("submit", function (ev) {
+    if (ev.target.id !== "slotForm") return;
+    ev.preventDefault();
+    var s = S.dlg, sid = Number($("#cSrv").value);
+    if (!sid) { dsFieldError($("#cSrv"), "Vælg en server."); return; }
+    var u = usageMap();
+    if (u[sid]) { dsFieldError($("#cSrv"), "Serveren er optaget (" + u[sid] + "). Vælg en ledig server."); return; }
+    dsFieldError($("#cSrv"), "");
+    if (failNow()) return;
+    var go = $("#cGo"); go.disabled = true; go.textContent = "Opretter…";
+    var start = $("#cStart").checked;
+    setTimeout(function () {
+      var e = E(0, 0, start ? 1 : 0, start, sid, 4900 + Math.floor(Math.random() * 90));
+      var g = s.bo3 ? s.games.filter(function (x) { return !x.w; })[0] : null;
+      if (g) { g.matchId = true; g.e = e; }
+      s.e = e; s.linked = true;
+      refresh(); dsToast(start ? "Kampen er oprettet og startet i eBot." : "Kampen er oprettet i eBot.", "ok");
+    }, 700);
+  });
+
+  /* dialog scenarios (bracket must be locked: they switch to the live data first) */
+  function scenario(name) {
+    if (S.view === "pre" || S.view === "pairs") setView("live");
+    S.locked = true;
+    var A = "Nordlys", B = "Kaktus Klan", clone;
+    function slot(over) {
+      var o = { id: "demo", round: 2, idx: 0, a: A, as: 1, b: B, bs: 5, bye: false, win: "", bo3: false, wa: 0, wb: 0, e: null, linked: false, games: [] };
+      for (var k in over) o[k] = over[k];
+      return o;
+    }
+    S.noServers = false;
+    if (name === "live") clone = slot({ a: "Jernbanen", as: 3, b: "Sorte Svaner", bs: 6, round: 1, e: E(9, 7, 5, true, 3, 4814), linked: true });
+    else if (name === "reserved") clone = slot({ e: E(0, 0, 0, false, 1, 4815), linked: true });
+    else if (name === "new") clone = slot({});
+    else if (name === "noservers") { clone = slot({}); S.noServers = true; }
+    else if (name === "finished") clone = slot({ a: "Rød Ugle", as: 2, b: "Lille Ulv", bs: 7, round: 1, e: E(13, 4, 13, false, 2, 4813), linked: true });
+    else if (name === "missing") { var m = E(0, 0, 0, false, 1, 4820); m.missing = true; clone = slot({ e: m, linked: true }); }
+    else if (name === "pending") clone = slot({ a: "Nordlys", b: "", bs: 0 });
+    else if (name === "bo3") {
+      var g0 = E(13, 10, 13, false, 1, 4817);
+      clone = slot({ id: "W3-0", round: 3, bo3: true, wa: 1, wb: 0, e: g0, linked: true,
+        games: [{ i: 0, w: "a", matchId: true, e: g0 }, { i: 1, w: "", matchId: false, e: null }] });
+    }
+    S.dlg = clone; S.moveTo = null; renderDlg();
+    if (!dlg.open) dlg.showModal();
+  }
+  $$("[data-scen]").forEach(function (b) { b.addEventListener("click", function () { scenario(b.dataset.scen); }); });
+
+  /* ---------- render all ---------- */
+  function renderAll() {
+    renderEvent();
+    $("#bracketArea").hidden = !S.hasBracket;
+    renderTS();
+    if (S.hasBracket) { renderPanel(); renderGuide(); }
+    renderMatches();
+    renderPair();
+    $("#pairWarn").hidden = !(S.servers.length < 4);
+  }
+
+  /* demo bar */
+  $$("[data-view]").forEach(function (b) { b.addEventListener("click", function () { setView(b.dataset.view); }); });
+  $("#failBox").addEventListener("change", function () { S.fail = this.checked; });
+  $$("[data-toast]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var m = { ok: "Gemt.", warn: "Der er ikke servere nok til alle kampe.", err: "Kunne ikke hente kampene." };
+      dsToast(m[b.dataset.toast], b.dataset.toast);
+    });
+  });
+
+  S.fail = false; S.perm = true;
+  setView("pre");
+})();
+</script>
+</body>
+</html>

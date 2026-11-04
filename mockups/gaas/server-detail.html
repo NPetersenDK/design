@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en" data-theme="gray">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example App: server detail (mockup)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../../design.css">
+<style>
+  /* app-only */
+  .m-bar { background: var(--panel-2); border-bottom: 1px dashed var(--border); padding: 8px 20px; }
+  .m-bar .row { gap: 8px 10px; }
+  .kv { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .kv > span { color: var(--muted); }
+  .kv > b { text-align: right; overflow-wrap: anywhere; }
+  .otherports { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+  .meter { height: 6px; border-radius: 999px; background: var(--border); margin-top: 8px; overflow: hidden; }
+  .meter > i { display: block; height: 100%; background: var(--ok); }
+  .meter.warn > i { background: var(--warn); }
+  .meter.err > i { background: var(--err); }
+  .console-log { height: 480px; max-height: none; }
+  .file-edit { width: 100%; min-height: 320px; }
+  .crumbs { gap: 6px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="m-bar">
+  <div class="row wrap small">
+    <strong>Mockup</strong>
+    <span class="muted">Theme</span>
+    <button class="btn sm" data-theme-set="blue">blue</button>
+    <button class="btn sm" data-theme-set="gray">gray</button>
+    <button class="btn sm" data-theme-set="esb">esb</button>
+    <span class="muted">Server</span>
+    <span id="demoState" class="row" style="gap:6px"></span>
+    <span class="muted">Tab</span>
+    <span id="demoTab" class="row" style="gap:6px"></span>
+    <span class="muted">Console</span>
+    <button class="btn sm" data-conn="ok">connected</button>
+    <button class="btn sm" data-conn="lost">disconnected</button>
+    <span class="muted">Backups</span>
+    <button class="btn sm" data-bk="list">list</button>
+    <button class="btn sm" data-bk="empty">empty</button>
+    <span class="muted">Viewer</span>
+    <button class="btn sm" data-role="admin">admin</button>
+    <button class="btn sm" data-role="viewer">read only</button>
+    <button class="btn sm" data-caps="1">all features</button>
+    <button class="btn sm" data-caps="0">no backups/files/usage</button>
+    <span class="muted">Errors</span>
+    <button class="btn sm" id="demoErr">action fails</button>
+  </div>
+</div>
+
+<header class="topbar">
+  <a href="#" class="brand">Example App</a>
+  <nav class="nav" id="nav">
+    <a href="#" class="active">Servers</a>
+    <span id="adminNav" class="row" style="gap:14px">
+      <a href="#">Section A</a><a href="#">Section B</a>
+    </span>
+  </nav>
+  <div class="spacer"></div>
+  <div class="dropdown" id="userMenu">
+    <button class="btn primary user-profile-button" id="userBtn" aria-haspopup="menu" aria-expanded="false">
+      <i class="fa-solid fa-circle-user" aria-hidden="true"></i> Hi Alex <i class="fa-solid fa-caret-down" aria-hidden="true"></i>
+    </button>
+    <div class="dropdown-menu" role="menu" hidden id="userDrop">
+      <div class="dropdown-header"><i class="fa-solid fa-id-badge" aria-hidden="true"></i> <span id="roleName">admin</span></div>
+      <a class="dropdown-item" role="menuitem" href="#"><i class="fa-solid fa-user" aria-hidden="true"></i> Profile</a>
+      <hr class="dropdown-divider">
+      <button class="dropdown-item" role="menuitem"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="content">
+<div class="stack">
+
+  <div class="row wrap" id="head"></div>
+
+  <div class="grid2">
+    <div class="card" id="cardInfo"></div>
+    <div class="card" id="cardMetrics"></div>
+    <div class="card" id="cardMeta"></div>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <!-- Console -->
+  <div class="card" id="panel-console">
+    <h3>Console</h3>
+    <pre class="log console-log" id="log" tabindex="0" aria-label="Console output"></pre>
+    <div id="ctl" class="stack" style="gap:12px">
+      <div class="toolbar" id="quick"></div>
+      <form class="toolbar" id="cmdform">
+        <input class="grow mono" id="cmd" placeholder="console command..." autocomplete="off" spellcheck="false" aria-label="Console command">
+        <button class="btn primary">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Backups -->
+  <div class="card" id="panel-backups" hidden>
+    <div class="row wrap">
+      <h3 class="grow">Backups</h3>
+      <button class="btn primary sm" id="takeBackup">Take backup</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="tblBackups">
+        <thead>
+          <tr>
+            <th style="width:28px"></th><th>When</th><th>By</th><th>Type</th><th>Status</th><th>File</th><th>Size</th><th>Location</th><th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Files -->
+  <div class="card" id="panel-files" hidden></div>
+
+</div>
+</main>
+
+<footer class="footer muted center-text">
+  <i>
+    Site created with <i class="fa-regular fa-heart" aria-hidden="true"></i> by Example Club and Alex Example
+    <br>
+    Code is available at: <a href="#">example.org</a>
+  </i>
+</footer>
+</div>
+
+<dialog class="modal wide" id="confirm" aria-labelledby="confirmTitle">
+  <h2 id="confirmTitle"></h2>
+  <p id="confirmMsg" class="muted" style="margin:0"></p>
+  <form method="dialog" class="row" style="justify-content:flex-end">
+    <button class="btn ghost" value="cancel">Cancel</button>
+    <button class="btn" id="confirmOk" value="ok">OK</button>
+  </form>
+</dialog>
+
+<dialog class="modal wide" id="folderDlg" aria-labelledby="folderTitle">
+  <h2 id="folderTitle">New folder</h2>
+  <div class="stack" style="gap:6px">
+    <label>New folder name <input id="folderName" class="mono" autocomplete="off" spellcheck="false"></label>
+  </div>
+  <form method="dialog" class="row" style="justify-content:flex-end">
+    <button class="btn ghost" value="cancel">Cancel</button>
+    <button class="btn primary" id="folderOk" value="ok">Create</button>
+  </form>
+</dialog>
+
+<script src="../../design.js"></script>
+<script>
+(function () {
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "gray");
+  document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  /* ---------- helpers ---------- */
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function empty() { return '<span aria-hidden="true">-</span><span class="sr-only">not set</span>'; }
+  function fmtSize(n) {
+    var b = n || 0;
+    if (b < 1024) return b + " B";
+    if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+    if (b < 1073741824) return (b / 1048576).toFixed(1) + " MB";
+    return (b / 1073741824).toFixed(1) + " GB";
+  }
+  function fmtCores(c) { return c >= 1 ? c.toFixed(2) + " cores" : Math.round(c * 1000) + " mCPU"; }
+  function fmtMi(mi) { return mi >= 1024 ? (mi / 1024).toFixed(1) + " GiB" : Math.round(mi) + " MiB"; }
+  function fmtDuration(seconds) {
+    var s = Math.max(0, Math.floor(seconds)), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600),
+        m = Math.floor((s % 3600) / 60), sec = s % 60, p = [];
+    if (d) p.push(d + "d"); if (h) p.push(h + "h"); if (m) p.push(m + "m");
+    if (sec || !p.length) p.push(sec + "s");
+    return p.slice(0, 2).join(" ");
+  }
+  function meterCls(pct) { return pct > 90 ? "err" : pct > 70 ? "warn" : ""; }
+
+  /* confirm dialog (replaces window.confirm) */
+  var dlg = $("confirm"), dlgCb = null;
+  function ask(title, msg, label, danger, cb) {
+    $("confirmTitle").textContent = title;
+    $("confirmMsg").textContent = msg;
+    $("confirmOk").textContent = label;
+    $("confirmOk").className = "btn " + (danger ? "danger" : "primary");
+    dlgCb = cb; dlg.returnValue = "";
+    dlg.showModal();
+  }
+  dlg.addEventListener("close", function () {
+    var cb = dlgCb; dlgCb = null;
+    if (dlg.returnValue === "ok" && cb) cb();
+  });
+
+  /* ---------- sample data ---------- */
+  var S = {
+    state: "running", tab: "console", role: "admin", caps: true, conn: "ok",
+    bk: "list", expanded: {}, busy: false, path: "/", editing: null
+  };
+  var me = { subject: "aexample", name: "Alex Example", groups: ["cs-team", "event-crew"] };
+
+  var server = {
+    name: "scrim-night", displayName: "Scrim Night", game: "cs2", gameDisplay: "Counter-Strike 2",
+    owner: "cs-team", ownerKind: "group", phase: "Ready", deleting: false,
+    address: "203.0.113.10",
+    ports: [{ name: "game", port: 27015, protocol: "UDP" }, { name: "rcon", port: 27015, protocol: "TCP" }, { name: "gotv", port: 27020, protocol: "UDP" }],
+    config: { password: "mock-password" },
+    attributes: { publicAddress: "198.51.100.20:27015" },
+    message: "", createdAt: "2026-10-12 14:03:41",
+    autoUpdate: true, destroyOnIdle: false, shutdownOnIdle: true, scheduledBackups: true,
+    playerCount: 4, playerNames: ["Robin Test", "Jo Demo", "Kit Mock", "Lee Sample"], playersUpdatedAt: "14:21:07", idleSeconds: null,
+    node: "worker-2", usage: { cpuCores: 1.35, memoryMi: 3277 }
+  };
+  var LIMITS = { cpu: 2, memMi: 4096 }; /* mock only: gives the bars something to fill */
+
+  function applyState(st) {
+    S.state = st;
+    server.deleting = false; server.message = ""; server.idleSeconds = null;
+    if (st === "running") {
+      Object.assign(server, { phase: "Ready", address: "203.0.113.10", node: "worker-2", usage: { cpuCores: 1.35, memoryMi: 3277 }, playerCount: 4, playerNames: ["Robin Test", "Jo Demo", "Kit Mock", "Lee Sample"], playersUpdatedAt: "14:21:07" });
+    } else if (st === "idle") {
+      Object.assign(server, { phase: "Ready", address: "203.0.113.10", node: "worker-2", usage: { cpuCores: 0.12, memoryMi: 812 }, playerCount: 0, playerNames: [], playersUpdatedAt: "14:21:07", idleSeconds: 754 });
+    } else if (st === "starting") {
+      Object.assign(server, { phase: "Starting", address: "", node: "", usage: null, playerCount: undefined, playerNames: [], playersUpdatedAt: "" });
+    } else if (st === "stopped") {
+      Object.assign(server, { phase: "Stopped", address: "203.0.113.10", node: "", usage: null, playerCount: undefined, playerNames: [], playersUpdatedAt: "" });
+    } else if (st === "error") {
+      Object.assign(server, { phase: "Failed", address: "", node: "worker-1", usage: null, playerCount: undefined, playerNames: [], playersUpdatedAt: "",
+        message: "Pod crash-looping: server exited with code 137 (out of memory). Restart it, or ask an admin to raise the memory limit." });
+    } else if (st === "deleting") {
+      Object.assign(server, { phase: "Ready", deleting: true, usage: { cpuCores: 0.02, memoryMi: 240 }, playerCount: 0, playerNames: [], playersUpdatedAt: "14:21:07", idleSeconds: 1800 });
+    }
+    resetConsole();
+  }
+
+  /* console lines per state; connection notices are added on top */
+  var baseLines = [];
+  function resetConsole() {
+    var st = S.state;
+    if (st === "running" || st === "idle" || st === "deleting") {
+      baseLines = [
+        "[14:02:11] Server is starting up",
+        "[14:02:19] Map: de_mirage",
+        "[14:02:22] Server is ready on 0.0.0.0:27015",
+        "[14:05:48] Robin Test connected",
+        "[14:06:02] Jo Demo connected",
+        "[14:06:40] Kit Mock connected",
+        "[14:09:13] Lee Sample connected",
+        "[14:15:30] Round 1 started",
+        "[14:17:02] Round 1 won by CT"
+      ];
+      if (st === "idle") baseLines.push("[14:21:00] Robin Test disconnected", "[14:21:01] Jo Demo disconnected", "[14:21:03] Kit Mock disconnected", "[14:21:05] Lee Sample disconnected");
+    } else if (st === "stopped") {
+      baseLines = ["[13:58:40] Saving world state", "[13:58:44] Server shutting down", "[13:58:45] Process exited with code 0"];
+    } else {
+      baseLines = [];
+    }
+  }
+  function notice() {
+    var p = server.phase;
+    if (S.conn === "ok") {
+      if (p === "Ready") return "";
+      if (p === "Stopped") return "- server stopped -";
+      return "- waiting for server... -";
+    }
+    if (p === "Stopped") return "- server stopped -";
+    if (p !== "Ready") return "- waiting for server... -";
+    return "- log stream lost, reconnecting... -";
+  }
+
+  var backups = [];
+  function seedBackups() {
+    backups = [
+      { id: "bk-20261104-0200", pod: "scrim-night-0", action: "backup", note: "Daily backup", createdBy: "scheduler", phase: "Completed", dest: "blob",
+        location: "https://store.example.net/backups/scrim-night/bk-20261104-0200.tar.zst", archive: "bk-20261104-0200.tar.zst", sizeBytes: 482344960,
+        createdAt: "2026-11-04 02:00:12", completionTime: "2026-11-04 02:01:37" },
+      { id: "bk-20261103-1815", pod: "scrim-night-0", action: "backup", note: "Before config change", createdBy: "Sam Sample (ssample)", phase: "Completed", dest: "local",
+        location: "/data/backups/scrim-night/bk-20261103-1815.tar.zst", archive: "bk-20261103-1815.tar.zst", sizeBytes: 479100000,
+        createdAt: "2026-11-03 18:15:03", completionTime: "2026-11-03 18:16:20" },
+      { id: "rs-20261103-1822", pod: "scrim-night-0", action: "restore", note: "", createdBy: "Sam Sample (ssample)", phase: "Running", dest: "", location: "",
+        archive: "bk-20261102-0200.tar.zst", createdAt: "2026-11-03 18:22:40" },
+      { id: "bk-20261102-0200", pod: "scrim-night-0", action: "backup", note: "", createdBy: "scheduler", phase: "Failed", message: "Archive upload failed: connection reset by object store",
+        dest: "blob", location: "", archive: "", createdAt: "2026-11-02 02:00:09" },
+      { id: "bk-20261027-0200", pod: "scrim-night-0", action: "backup", note: "Daily backup", createdBy: "scheduler", phase: "Deleted", deleteReason: "retention", deletedAt: "2026-11-03 02:00:50",
+        dest: "blob", location: "https://store.example.net/backups/scrim-night/bk-20261027-0200.tar.zst", archive: "bk-20261027-0200.tar.zst", sizeBytes: 470524928,
+        createdAt: "2026-10-27 02:00:11", completionTime: "2026-10-27 02:01:30" },
+      { id: "bk-20261020-1300", pod: "scrim-night-0", action: "backup", note: "", createdBy: "Alex Example (aexample)", phase: "Deleted", deleteReason: "manual", deletedAt: "2026-10-21 09:12:33",
+        dest: "local", location: "/data/backups/scrim-night/bk-20261020-1300.tar.zst", archive: "bk-20261020-1300.tar.zst", sizeBytes: 11264,
+        createdAt: "2026-10-20 13:00:02" },
+      { id: "bk-20261019-0900", pod: "", action: "backup", note: "", createdBy: "", phase: "Pending", dest: "", location: "", archive: "", createdAt: "2026-10-19 09:00:00" }
+    ];
+  }
+  seedBackups();
+
+  var FS = {
+    "/": [
+      { name: "cfg", isDir: true, size: 0, modTime: "2026-10-30T18:44:02Z" },
+      { name: "maps", isDir: true, size: 0, modTime: "2026-10-12T14:05:10Z" },
+      { name: "plugins", isDir: true, size: 0, modTime: "2026-10-25T09:31:55Z" },
+      { name: "tmp", isDir: true, size: 0, modTime: "2026-11-01T22:10:00Z" },
+      { name: "core.1204", isDir: false, size: 412876800, modTime: "2026-11-02T03:14:09Z" },
+      { name: "motd.txt", isDir: false, size: 214, modTime: "2026-10-12T14:20:31Z" },
+      { name: "server.cfg", isDir: false, size: 1288, modTime: "2026-10-30T18:44:02Z" }
+    ],
+    "/cfg": [
+      { name: "admins.json", isDir: false, size: 342, modTime: "2026-10-18T11:02:44Z" },
+      { name: "gamemode_competitive.cfg", isDir: false, size: 3912, modTime: "2026-10-12T14:05:10Z" }
+    ],
+    "/maps": [
+      { name: "de_mirage.bsp", isDir: false, size: 66354176, modTime: "2026-10-12T14:05:10Z" },
+      { name: "de_nuke.bsp", isDir: false, size: 58720256, modTime: "2026-10-12T14:05:10Z" }
+    ],
+    "/plugins": [
+      { name: "demo-recorder", isDir: true, size: 0, modTime: "2026-10-25T09:31:55Z" },
+      { name: "plugins.ini", isDir: false, size: 96, modTime: "2026-10-25T09:31:55Z" }
+    ],
+    "/plugins/demo-recorder": [{ name: "recorder.dll", isDir: false, size: 184320, modTime: "2026-10-25T09:31:55Z" }],
+    "/tmp": []
+  };
+  var FILE_TEXT = {
+    "/server.cfg": 'hostname "Scrim Night"\nsv_password "mock-password"\nrcon_password "mock-password"\nmp_autoteambalance 0\nmp_limitteams 0\nsv_cheats 0\ntv_enable 1\ntv_port 27020\n',
+    "/motd.txt": "Welcome to Scrim Night.\nBe nice, be on time, report bugs to the coach.\n"
+  };
+
+  /* ---------- permissions / capabilities ---------- */
+  function controllable() { return S.role === "admin"; }
+  function deletable() { return S.role === "admin"; }
+  function canBackup() { return S.role === "admin"; }
+  function canWrite() { return S.role === "admin"; }
+
+  /* ---------- demo bar ---------- */
+  var STATES = [["running", "running, 4 players"], ["idle", "running, empty"], ["starting", "starting"], ["stopped", "stopped"], ["error", "error"], ["deleting", "deleting"]];
+  function renderDemo() {
+    $("demoState").innerHTML = STATES.map(function (s) {
+      return '<button class="btn sm' + (S.state === s[0] ? " primary" : "") + '" data-state="' + s[0] + '">' + s[1] + "</button>";
+    }).join("");
+    var tabs = [["console", "console"]];
+    if (S.caps) tabs.push(["backups", "backups"], ["files", "files"]);
+    $("demoTab").innerHTML = tabs.map(function (t) {
+      return '<button class="btn sm' + (S.tab === t[0] ? " primary" : "") + '" data-tab="' + t[0] + '">' + t[1] + "</button>";
+    }).join("");
+    document.querySelectorAll("[data-conn]").forEach(function (b) { b.classList.toggle("primary", b.dataset.conn === S.conn); });
+    document.querySelectorAll("[data-bk]").forEach(function (b) { b.classList.toggle("primary", b.dataset.bk === S.bk); });
+    document.querySelectorAll("[data-role]").forEach(function (b) { b.classList.toggle("primary", b.dataset.role === S.role); });
+    document.querySelectorAll("[data-caps]").forEach(function (b) { b.classList.toggle("primary", (b.dataset.caps === "1") === S.caps); });
+  }
+  document.querySelector(".m-bar").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.state) { applyState(b.dataset.state); }
+    else if (b.dataset.tab) { S.tab = b.dataset.tab; }
+    else if (b.dataset.conn) { S.conn = b.dataset.conn; }
+    else if (b.dataset.bk) { S.bk = b.dataset.bk; if (S.bk === "list") seedBackups(); S.expanded = {}; }
+    else if (b.dataset.role) { S.role = b.dataset.role; }
+    else if (b.dataset.caps) { S.caps = b.dataset.caps === "1"; if (!S.caps) S.tab = "console"; }
+    else if (b.id === "demoErr") { dsError("Could not reach the operator: connection refused", "Action failed"); return; }
+    else return;
+    renderAll();
+  });
+
+  /* ---------- user menu ---------- */
+  $("userBtn").addEventListener("click", function () {
+    var open = $("userDrop").hidden;
+    $("userDrop").hidden = !open;
+    $("userBtn").setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", function (e) {
+    if (!$("userMenu").contains(e.target)) { $("userDrop").hidden = true; $("userBtn").setAttribute("aria-expanded", "false"); }
+  });
+
+  /* ---------- header + actions ---------- */
+  function renderHead() {
+    var h = '<button class="btn ghost sm" id="back"><span aria-hidden="true">&larr;</span> Back</button>' +
+      "<h2>" + esc(server.displayName || server.name) + "</h2>" +
+      '<div class="spacer"></div>';
+    if (controllable()) {
+      h += server.phase === "Stopped"
+        ? '<button class="btn" id="startBtn">Start</button>'
+        : '<button class="btn" id="stopBtn">Stop</button>';
+      h += '<button class="btn" id="restartBtn">Restart</button>';
+    }
+    if (deletable()) h += '<button class="btn danger" id="deleteBtn">Delete</button>';
+    $("head").innerHTML = h;
+    $("adminNav").hidden = S.role !== "admin";
+    $("roleName").textContent = S.role === "admin" ? "admin" : "viewer";
+  }
+  $("head").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.id === "back") dsToast("Back to the server list (mock)", "info");
+    else if (b.id === "startBtn") { applyState("starting"); dsToast("Starting " + server.name, "info"); renderAll(); }
+    else if (b.id === "restartBtn") {
+      ask("Restart " + server.name + "?", "Players are disconnected while the server restarts.", "Restart", false, function () {
+        applyState("starting"); dsToast("Restarting " + server.name, "info"); renderAll();
+      });
+    } else if (b.id === "stopBtn") {
+      if (server.destroyOnIdle) {
+        ask("Terminate " + server.name + "?",
+          "This server is set to automatically be deleted when the idle period is reached. Shutting it down will terminate it now.",
+          "Terminate", true, function () { dsToast("Server deleted, back to the server list (mock)", "ok"); });
+      } else { applyState("stopped"); dsToast("Stopped " + server.name, "ok"); renderAll(); }
+    } else if (b.id === "deleteBtn") {
+      ask("Delete " + server.name + "?", "Delete " + server.name + "? This cannot be undone.", "Delete", true, function () {
+        dsToast("Server deleted, back to the server list (mock)", "ok");
+      });
+    }
+  });
+
+  /* ---------- cards ---------- */
+  function badgeCls(p) { return p === "Ready" ? "ok" : p === "Failed" ? "err" : p === "Stopped" ? "muted" : "warn"; }
+  function renderInfo() {
+    var s = server, game = (s.ports || []).filter(function (p) { return p.name === "game"; })[0];
+    var others = (s.ports || []).filter(function (p) { return p.name !== "game"; });
+    var label = s.deleting ? "Deleting" : s.phase;
+    var addr = s.address && game ? s.address + ":" + game.port : "";
+    var h = "<h3>Server info</h3>" +
+      '<div class="kv"><span>Status</span><b><span class="badge ' + (s.deleting ? "warn" : badgeCls(s.phase)) + '">' + esc(label) + "</span></b></div>" +
+      '<div class="kv"><span>Game</span><b>' + esc(s.gameDisplay || s.game) + "</b></div>" +
+      '<div class="kv"><span>Connect</span><b class="mono">' +
+        (addr ? esc(addr) + ' <button class="btn ghost sm" id="copyAddr" title="Copy address" aria-label="Copy address"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>' : empty()) + "</b></div>";
+    if (s.attributes && s.attributes.publicAddress) h += '<div class="kv"><span>Public address</span><b class="mono">' + esc(s.attributes.publicAddress) + "</b></div>";
+    if (s.config && s.config.password) h += '<div class="kv"><span>Password</span><b class="mono">' + esc(s.config.password) + "</b></div>";
+    if (others.length) {
+      h += '<div class="otherports muted"><span>Other ports</span>' + others.map(function (p) {
+        return '<span class="mono">' + esc(p.name) + " - " + esc(s.address || "?") + ":" + p.port + "/" + esc(p.protocol) + "</span>";
+      }).join("") + "</div>";
+    }
+    if (s.message) h += '<div class="error">' + esc(s.message) + "</div>";
+    $("cardInfo").innerHTML = h;
+  }
+  $("cardInfo").addEventListener("click", function (e) {
+    if (!e.target.closest("#copyAddr")) return;
+    var txt = server.address + ":27015";
+    try { navigator.clipboard.writeText(txt).then(function () { dsToast("Copied " + txt, "ok"); }, function () { dsToast("Could not copy", "warn"); }); }
+    catch (err) { dsToast("Could not copy", "warn"); }
+  });
+
+  function renderMetrics() {
+    var s = server;
+    var h = "<h3>Server metrics</h3>" +
+      '<div class="kv"><span>Node</span><b class="mono">' + (s.node ? esc(s.node) : empty()) + "</b></div>";
+    if (S.caps) {
+      var cpuPct = s.usage ? Math.min(100, s.usage.cpuCores / LIMITS.cpu * 100) : 0;
+      var memPct = s.usage ? Math.min(100, s.usage.memoryMi / LIMITS.memMi * 100) : 0;
+      h += '<div class="grid2">' +
+        '<div class="stat sm"><div class="stat-label">CPU usage</div><div class="stat-value mono">' + (s.usage ? fmtCores(s.usage.cpuCores) : empty()) + "</div>" +
+          '<div class="meter ' + meterCls(cpuPct) + '" role="progressbar" aria-label="CPU usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(cpuPct) + '"><i style="width:' + cpuPct + '%"></i></div></div>' +
+        '<div class="stat sm"><div class="stat-label">RAM usage</div><div class="stat-value mono">' + (s.usage ? fmtMi(s.usage.memoryMi) : empty()) + "</div>" +
+          '<div class="meter ' + meterCls(memPct) + '" role="progressbar" aria-label="RAM usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(memPct) + '"><i style="width:' + memPct + '%"></i></div></div>' +
+        "</div>";
+    }
+    if (s.playerCount != null) {
+      var names = (s.playerNames || []).length ? " - " + s.playerNames.map(esc).join(", ") : "";
+      h += '<div class="kv"><span>Players</span><b>' + s.playerCount + names + "</b></div>";
+      if (s.playerCount === 0 && s.idleSeconds != null) h += '<div class="kv"><span>Idle</span><b>' + fmtDuration(s.idleSeconds) + "</b></div>";
+      h += '<div class="muted small">' + (s.playersUpdatedAt ? "As of " + esc(s.playersUpdatedAt) + " - " : "") +
+        "updates on the operator sweep, so it can be a couple of minutes stale.</div>";
+    }
+    $("cardMetrics").innerHTML = h;
+  }
+
+  var ownerSel = "";
+  function ownerValue() { return server.ownerKind === "group" ? "group:" + server.owner : "user:" + me.subject; }
+  function renderMeta() {
+    var s = server, dis = S.role !== "admin" && false;
+    function cb(id, on, text) { return '<label class="checkbox"><input type="checkbox" data-flag="' + id + '"' + (on ? " checked" : "") + "> " + text + "</label>"; }
+    var owner = s.ownerKind === "group" ? esc(s.owner) + " (group)" : esc(me.name) + " (" + esc(me.subject) + ")";
+    var h = "<h3>Metadata</h3>" +
+      '<div class="kv"><span>Created</span><b>' + (s.createdAt ? esc(s.createdAt) : empty()) + "</b></div>" +
+      '<div class="kv"><span>Owner</span><b>' + owner + "</b></div>" +
+      cb("autoUpdate", s.autoUpdate, "Auto-update to new builds when nobody is playing") +
+      cb("destroyOnIdle", s.destroyOnIdle, "Destroy after sitting idle (admin-configured window)") +
+      cb("shutdownOnIdle", s.shutdownOnIdle, "Shut down after sitting idle (admin-configured window)") +
+      '<div class="muted small">Shutting down keeps the server, its address and its data - only the pod stops. Start it again any time.</div>';
+    if (S.caps) h += cb("scheduledBackups", s.scheduledBackups, "Daily backup when nobody is playing");
+    var cur = ownerValue(), val = ownerSel || cur;
+    h += '<div class="toolbar"><select id="ownerSel" aria-label="Owner">' +
+      '<option value="user:' + esc(me.subject) + '"' + (val === "user:" + me.subject ? " selected" : "") + ">Me (" + esc(me.name) + ")</option>" +
+      me.groups.map(function (g) { return '<option value="group:' + esc(g) + '"' + (val === "group:" + g ? " selected" : "") + ">Group: " + esc(g) + "</option>"; }).join("") +
+      '</select><button class="btn sm" id="ownerBtn"' + (!ownerSel || ownerSel === cur ? " disabled" : "") + ">Change owner</button></div>";
+    $("cardMeta").innerHTML = h;
+  }
+  $("cardMeta").addEventListener("change", function (e) {
+    var f = e.target.getAttribute("data-flag");
+    if (f) {
+      server[f] = e.target.checked;
+      dsToast("Saved: " + e.target.parentNode.textContent.trim() + (e.target.checked ? " (on)" : " (off)"), "ok");
+    } else if (e.target.id === "ownerSel") { ownerSel = e.target.value; renderMeta(); $("ownerSel").focus(); }
+  });
+  $("cardMeta").addEventListener("click", function (e) {
+    if (!e.target.closest("#ownerBtn")) return;
+    if (ownerSel.indexOf("group:") === 0) { server.owner = ownerSel.slice(6); server.ownerKind = "group"; }
+    else { server.owner = me.subject; server.ownerKind = ""; }
+    ownerSel = ""; dsToast("Owner changed", "ok"); renderMeta();
+  });
+
+  /* ---------- tabs ---------- */
+  function renderTabs() {
+    var t = [["console", "Console"]];
+    if (S.caps) t.push(["backups", "Backups"], ["files", "Files"]);
+    $("tabs").innerHTML = t.map(function (x) {
+      return '<button class="tab' + (S.tab === x[0] ? " on" : "") + '" role="tab" aria-selected="' + (S.tab === x[0]) + '" data-tab="' + x[0] + '">' + x[1] + "</button>";
+    }).join("");
+    ["console", "backups", "files"].forEach(function (n) { $("panel-" + n).hidden = S.tab !== n; });
+  }
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]"); if (!b) return;
+    S.tab = b.dataset.tab; renderAll();
+  });
+
+  /* ---------- console ---------- */
+  var QUICK = ["status", "users", "mp_restartgame 1", "sv_cheats 0", "changelevel de_nuke"];
+  function renderConsole() {
+    var lines = baseLines.slice(), n = notice();
+    if (n) lines.push(n);
+    var log = $("log");
+    log.textContent = lines.join("\n");
+    log.scrollTop = log.scrollHeight;
+    $("ctl").hidden = !controllable();
+    $("quick").innerHTML = QUICK.map(function (q) { return '<button type="button" class="btn ghost sm" data-q="' + esc(q) + '">' + esc(q) + "</button>"; }).join("");
+  }
+  function sendCmd(cmd) {
+    if (!cmd.trim()) return;
+    if (server.phase !== "Ready") { dsError("The server is not running, so it cannot take commands.", "Command not sent"); return; }
+    baseLines.push("> " + cmd);
+    $("cmd").value = "";
+    renderConsole();
+  }
+  $("quick").addEventListener("click", function (e) { var b = e.target.closest("[data-q]"); if (b) sendCmd(b.dataset.q); });
+  $("cmdform").addEventListener("submit", function (e) { e.preventDefault(); sendCmd($("cmd").value); });
+
+  /* ---------- backups ---------- */
+  function phaseBadge(p) { return p === "Completed" ? "ok" : p === "Failed" ? "err" : p === "Deleted" ? "muted" : "warn"; }
+  function extras(b) {
+    var out = [["Note", b.note], ["Completed", b.completionTime], ["Destination", b.dest], ["Pod", b.pod], ["Id", b.id]];
+    if (b.phase !== "Deleted") out.push(["Delete reason", b.deleteReason], ["Deleted", b.deletedAt]);
+    return out.filter(function (x) { return !!x[1]; });
+  }
+  function locationCell(loc) {
+    if (!loc) return empty();
+    var l = loc.indexOf("http") === 0 ? "blob" : loc.length > 24 ? "..." + loc.slice(-24) : loc;
+    return '<span title="' + esc(loc) + '">' + esc(l) + "</span>";
+  }
+  function renderBackups() {
+    var list = S.bk === "empty" ? [] : backups, h = "";
+    list.forEach(function (b) {
+      var ex = extras(b), open = !!S.expanded[b.id];
+      var cls = [ex.length ? "clickable" : "", ex.length && open ? "open" : "", b.phase === "Deleted" ? "muted" : ""].filter(Boolean).join(" ");
+      h += "<tr" + (cls ? ' class="' + cls + '"' : "") + ' data-id="' + esc(b.id) + '"' + (ex.length ? ' aria-expanded="' + open + '"' : "") + ">" +
+        '<td class="chev">' + (ex.length ? '<i class="fa-solid fa-chevron-right" aria-hidden="true"></i>' : "") + "</td>" +
+        '<td class="mono">' + esc(b.createdAt) + "</td>" +
+        "<td>" + (b.createdBy ? esc(b.createdBy) : empty()) + "</td>" +
+        "<td>" + (b.action === "restore" ? "restore" : "backup") + "</td>" +
+        '<td><span class="badge ' + phaseBadge(b.phase) + '">' + esc(b.phase) + "</span>" +
+          (b.phase === "Deleted" ? '<div class="muted">' + (b.deleteReason === "retention" ? "by retention" : "manually") + (b.deletedAt ? " - " + esc(b.deletedAt) : "") + "</div>" : "") +
+          (b.message ? '<div class="error">' + esc(b.message) + "</div>" : "") + "</td>" +
+        '<td class="mono">' + (b.archive ? esc(b.archive) : empty()) + "</td>" +
+        '<td class="mono">' + (b.sizeBytes == null ? empty() : fmtSize(b.sizeBytes)) + "</td>" +
+        '<td class="mono">' + locationCell(b.location) + "</td>" +
+        '<td class="row">' +
+          (canBackup() && b.action !== "restore" && b.phase === "Completed" ? '<button class="btn ghost sm" data-act="restore"' + (S.busy ? " disabled" : "") + ">Restore</button>" : "") +
+          (canBackup() && b.action !== "restore" && b.phase !== "Deleted" ? '<button class="btn ghost sm danger" data-act="delete">Delete</button>' : "") +
+        "</td></tr>";
+      if (open && ex.length) {
+        h += '<tr class="rowdetail"><td></td><td colspan="8"><div class="rowdetail-grid muted">' +
+          ex.map(function (x) { return "<span>" + esc(x[0]) + ": <b class=\"mono\">" + esc(x[1]) + "</b></span>"; }).join("") + "</div></td></tr>";
+      }
+    });
+    if (!list.length) h = '<tr><td colspan="9" class="muted">No backups yet</td></tr>';
+    $("tblBackups").querySelector("tbody").innerHTML = h;
+    $("takeBackup").hidden = !canBackup();
+    $("takeBackup").disabled = S.busy;
+  }
+  function findBackup(tr) { return backups.filter(function (b) { return b.id === tr.dataset.id; })[0]; }
+  var bkBody = $("tblBackups").querySelector("tbody");
+  dsRowClick(bkBody, function (tr) { S.expanded[tr.dataset.id] = !S.expanded[tr.dataset.id]; renderBackups(); });
+  bkBody.addEventListener("click", function (e) {
+    var btn = e.target.closest("button[data-act]"); if (!btn) return;
+    var b = findBackup(btn.closest("tr"));
+    if (btn.dataset.act === "restore") {
+      ask("Restore " + b.id + "?", "Restore " + b.id + "? This overwrites current data and briefly stops the server.", "Restore", true, function () {
+        S.busy = true; renderBackups(); dsToast("Restore started", "info");
+        setTimeout(function () { S.busy = false; renderBackups(); dsToast("Restore completed", "ok"); }, 2500);
+      });
+    } else {
+      ask("Delete backup " + b.id + "?", "Delete backup " + b.id + "? The archive is removed and cannot be recovered.", "Delete", true, function () {
+        b.phase = "Deleted"; b.deleteReason = "manual"; b.deletedAt = "2026-11-04 14:30:00"; renderBackups(); dsToast("Backup deleted", "ok");
+      });
+    }
+  });
+  $("takeBackup").addEventListener("click", function () {
+    ask("Take a backup?", "Take a backup? The server is briefly stopped during the copy.", "Take backup", false, function () {
+      S.busy = true; S.bk = "list";
+      var nb = { id: "bk-20261104-1430", pod: "scrim-night-0", action: "backup", note: "", createdBy: "Alex Example (aexample)", phase: "Running", dest: "", location: "", archive: "", createdAt: "2026-11-04 14:30:00" };
+      backups.unshift(nb); renderDemo(); renderBackups(); dsToast("Backup started", "info");
+      setTimeout(function () {
+        Object.assign(nb, { phase: "Completed", dest: "blob", archive: "bk-20261104-1430.tar.zst", sizeBytes: 484900000,
+          location: "https://store.example.net/backups/scrim-night/bk-20261104-1430.tar.zst", completionTime: "2026-11-04 14:31:22" });
+        S.busy = false; renderBackups(); dsToast("Backup completed", "ok");
+      }, 2500);
+    });
+  });
+
+  /* ---------- files ---------- */
+  function joinPath(d, n) { return d === "/" ? "/" + n : d + "/" + n; }
+  function parentPath(d) { if (d === "/" || d === "") return "/"; var i = d.lastIndexOf("/"); return i <= 0 ? "/" : d.slice(0, i); }
+  function renderFiles() {
+    var el = $("panel-files");
+    if (server.phase !== "Ready") {
+      el.innerHTML = '<p class="muted">The server must be running to manage its files.</p>';
+      return;
+    }
+    var h = '<div class="row wrap"><h3 class="grow">Files</h3>';
+    if (canWrite()) {
+      h += '<button class="btn ghost sm" id="newFolder">New folder</button>' +
+        '<button class="btn ghost sm" id="uploadBtn"' + (S.busy ? " disabled" : "") + ">Upload</button>" +
+        '<input type="file" id="fileInput" hidden>';
+    }
+    h += "</div>" +
+      '<div class="row mono crumbs"><button class="btn ghost sm" data-go="/" title="root">/</button>' +
+      (S.path !== "/" ? '<button class="btn ghost sm" data-go="' + esc(parentPath(S.path)) + '"><span aria-hidden="true">&larr;</span> up</button>' : "") +
+      '<span class="muted">' + esc(S.path) + "</span></div>";
+    if (S.editing) {
+      h += '<div class="stack"><div class="row wrap"><b class="mono grow">' + esc(S.editing.path) + "</b>" +
+        '<button class="btn primary sm" id="saveEdit"' + (!canWrite() ? " disabled" : "") + ">Save</button>" +
+        '<button class="btn ghost sm" id="closeEdit">Close</button></div>' +
+        '<textarea class="mono file-edit" id="editArea" aria-label="File contents"' + (!canWrite() ? " readonly" : "") + ">" + esc(S.editing.content) + "</textarea></div>";
+    } else {
+      var entries = (FS[S.path] || []).slice().sort(function (a, b) { return a.isDir !== b.isDir ? (a.isDir ? -1 : 1) : a.name.localeCompare(b.name); });
+      h += '<div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody>';
+      entries.forEach(function (f) {
+        h += "<tr><td><button class=\"btn ghost sm\" data-open=\"" + esc(f.name) + '"><i class="fa-solid ' + (f.isDir ? "fa-folder" : "fa-file") + '" aria-hidden="true"></i> ' + esc(f.name) + "</button></td>" +
+          '<td class="mono">' + (f.isDir ? empty() : fmtSize(f.size)) + "</td>" +
+          '<td class="mono">' + esc(f.modTime.replace("T", " ").replace("Z", "")) + "</td>" +
+          '<td class="row">' + (!f.isDir ? '<a class="btn ghost sm" href="#" data-dl="' + esc(f.name) + '">Download</a>' : "") +
+          (canWrite() ? '<button class="btn ghost sm danger" data-del="' + esc(f.name) + '">Delete</button>' : "") + "</td></tr>";
+      });
+      if (!entries.length) h += '<tr><td colspan="4" class="muted">Empty</td></tr>';
+      h += "</tbody></table></div>";
+    }
+    el.innerHTML = h;
+  }
+  $("panel-files").addEventListener("click", function (e) {
+    var b = e.target.closest("button, a"); if (!b) return;
+    if (b.dataset.go != null) { S.path = b.dataset.go; S.editing = null; renderFiles(); }
+    else if (b.dataset.open) {
+      var f = (FS[S.path] || []).filter(function (x) { return x.name === b.dataset.open; })[0], p = joinPath(S.path, f.name);
+      if (f.isDir) { S.path = p; renderFiles(); }
+      else if (FILE_TEXT[p] != null) { S.editing = { path: p, content: FILE_TEXT[p] }; renderFiles(); }
+      else if (/\.(cfg|json|ini|txt)$/.test(f.name)) { S.editing = { path: p, content: "; contents of " + f.name + "\n" }; renderFiles(); }
+      else dsError("Cannot edit (probably binary): file is not valid text. Use download instead.", "Cannot open file");
+    }
+    else if (b.dataset.dl) { e.preventDefault(); dsToast("Downloading " + b.dataset.dl, "info"); }
+    else if (b.dataset.del) {
+      var nm = b.dataset.del;
+      ask("Delete " + nm + "?", "Delete " + nm + "?", "Delete", true, function () {
+        FS[S.path] = FS[S.path].filter(function (x) { return x.name !== nm; }); renderFiles(); dsToast("Deleted " + nm, "ok");
+      });
+    }
+    else if (b.id === "newFolder") { $("folderName").value = ""; dsFieldError($("folderName"), ""); $("folderDlg").showModal(); $("folderName").focus(); }
+    else if (b.id === "uploadBtn") $("fileInput").click();
+    else if (b.id === "closeEdit") { S.editing = null; renderFiles(); }
+    else if (b.id === "saveEdit") {
+      FILE_TEXT[S.editing.path] = $("editArea").value; S.editing = null; renderFiles(); dsToast("File saved", "ok");
+    }
+  });
+  $("panel-files").addEventListener("change", function (e) {
+    if (e.target.id !== "fileInput" || !e.target.files[0]) return;
+    var f = e.target.files[0];
+    (FS[S.path] = FS[S.path] || []).push({ name: f.name, isDir: false, size: f.size, modTime: "2026-11-04T14:30:00Z" });
+    renderFiles(); dsToast("Uploaded " + f.name, "ok");
+  });
+  $("folderDlg").addEventListener("close", function () {
+    if ($("folderDlg").returnValue !== "ok") return;
+    var n = $("folderName").value.trim();
+    (FS[S.path] = FS[S.path] || []).push({ name: n, isDir: true, size: 0, modTime: "2026-11-04T14:30:00Z" });
+    FS[joinPath(S.path, n)] = [];
+    renderFiles(); dsToast("Created folder " + n, "ok");
+  });
+  /* validate before the dialog closes: keep it open and show the field error */
+  $("folderOk").addEventListener("click", function (e) {
+    var n = $("folderName").value.trim(), taken = (FS[S.path] || []).some(function (x) { return x.name === n; });
+    var msg = !n ? "Enter a folder name" : taken ? "A file or folder with that name already exists" : /[\/\\]/.test(n) ? "Use a name without slashes" : "";
+    dsFieldError($("folderName"), msg);
+    if (msg) { e.preventDefault(); $("folderName").focus(); }
+  });
+
+  /* ---------- render ---------- */
+  function renderAll() {
+    renderDemo(); renderHead(); renderInfo(); renderMetrics(); renderMeta(); renderTabs();
+    renderConsole(); renderBackups(); renderFiles();
+  }
+  applyState("running");
+  renderAll();
+})();
+</script>
+</body>
+</html>

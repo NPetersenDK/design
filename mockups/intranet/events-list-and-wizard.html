@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="da" data-theme="esb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example Club: events list, wizard, drafting (mockup)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../../design.css">
+<style>
+  /* app-only */
+  /* Demo bar: not part of the app. */
+  .m-bar { background: var(--panel-2); border-bottom: 1px dashed var(--border); padding: 8px 20px; display: flex; flex-direction: column; gap: 6px; }
+  .m-bar select, .m-bar input { font-size: 12px; padding: 3px 8px; }
+  .m-bar .btn.on { border-color: var(--accent-edge); background: var(--accent-soft); }
+
+  /* Wizard step indicator. Current = selected (theme), done = status (ok). */
+  .wizard-steps { display: flex; align-items: center; flex-wrap: wrap; row-gap: 8px; list-style: none; margin: 0 0 4px; padding: 0; }
+  .wizard-steps li { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 15px; }
+  .wizard-steps li + li::before { content: ""; width: 48px; height: 2px; margin: 0 12px; background: var(--border-strong); }
+  .wizard-dot {
+    display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex: none;
+    border-radius: 50%; border: 2px solid var(--border-strong); background: var(--inset); font-size: 14px; font-weight: 700;
+  }
+  .wizard-steps .current { color: var(--text); font-weight: 700; }
+  .wizard-steps .current .wizard-dot { background: var(--accent); border-color: var(--accent); color: var(--text); }
+  .wizard-steps .done { color: var(--text); }
+  .wizard-steps .done .wizard-dot { border-color: var(--ok); color: var(--ok); }
+  .wizard-steps .skipped { opacity: 0.45; }
+  .wizard-steps .skipped .wizard-label { text-decoration: line-through; }
+  @media (max-width: 600px) {
+    .wizard-steps li + li::before { width: 14px; margin: 0 6px; }
+    .wizard-steps li { gap: 6px; font-size: 13px; }
+    .wizard-steps li:not(.current) .wizard-label { display: none; }
+  }
+
+  /* Choice cards: .btn.choice from design.css, laid out in a grid, with an icon and a selected state. */
+  .choice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 14px; }
+  .choice-grid .btn.choice { padding: 20px; gap: 6px; min-height: 120px; }
+  .choice-grid .btn.choice i { font-size: 26px; color: var(--accent); margin-bottom: 4px; }
+  .choice-grid .btn.choice b { font-size: 17px; }
+  .btn.choice.on { border-color: var(--accent-edge); background: var(--accent-soft); }
+  .card .btn.choice.on { background: var(--accent-soft); }
+
+  /* Surfaces inside a card: inset + neutral edge. */
+  .card .btn.choice, .card .cal-item, .card .presets, .card .rating, .card .rating-badge, .card .chip, .card .card {
+    background: var(--inset); border-color: var(--border-strong);
+  }
+  .card .btn.choice:hover, .card .cal-item:hover, .card .chip:hover { border-color: var(--accent-edge); }
+
+  /* Calendar picker */
+  .cal-list { display: flex; flex-direction: column; gap: 4px; max-height: 200px; overflow-y: auto; }
+  .cal-item {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    width: 100%; text-align: left; font: inherit; font-size: 13px; cursor: pointer;
+    background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px;
+  }
+  .cal-item:hover { border-color: var(--accent-edge); }
+  .card .cal-item.on, .cal-item.on { background: var(--accent-soft); border-color: var(--accent-edge); }
+  .cal-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cal-date { color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+  /* Team cards and player lists */
+  .teamgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
+  .playerlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .playerlist li { display: flex; align-items: center; gap: 8px; padding: 3px 0; border-bottom: 1px solid var(--border); }
+  .card .card .playerlist li { border-bottom-color: var(--border-strong); }
+  .playerlist li:last-child { border-bottom: none; }
+  .playerlist li[draggable="true"] { cursor: grab; }
+  .drag-handle { color: var(--muted); font-size: 11px; }
+  .card[data-over] { border-color: var(--accent-edge); }
+  .tagpick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tagpick button { background: none; cursor: pointer; font: inherit; font-size: 12px; }
+  .tagpick button.sel { color: var(--info); border-color: var(--info); }
+  .presets { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border: 1px dashed var(--border); border-radius: 8px; }
+  .presets-title { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+
+  /* Rating picker: a segmented 1-10 row. Selected fills 1..value (selection = theme colour). */
+  .rating { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--panel-2); }
+  .rating button {
+    border: 0; border-left: 1px solid var(--border-strong); background: transparent;
+    color: var(--muted); padding: 5px 9px; cursor: pointer; font: inherit; line-height: 1;
+  }
+  .rating button:first-child { border-left: 0; }
+  .rating button:hover { color: var(--text); background: var(--accent-soft); }
+  .rating button.on { background: var(--accent); color: var(--text); font-weight: 600; }
+  .rating-badge {
+    display: inline-block; min-width: 1.6em; text-align: center; border: 1px solid var(--border);
+    background: var(--panel-2); border-radius: 4px; padding: 1px 6px; font-size: 12px; font-weight: 600;
+  }
+
+  /* Player rows: a grid so the columns line up across rows. */
+  .draft-row { display: grid; grid-template-columns: minmax(6rem, 1fr) minmax(0, 13rem) 11rem repeat(3, max-content); align-items: center; gap: 8px; }
+  .draft-cell { min-width: 0; display: flex; }
+  .draft-cell .badge { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .draft-cell select { width: 100%; }
+  @media (max-width: 900px) {
+    .draft-row { display: flex; flex-wrap: wrap; }
+    .draft-row > input { flex: 1 1 10rem; }
+  }
+  details.reg summary { cursor: pointer; user-select: none; font-weight: 600; }
+  details.reg[open] summary { margin-bottom: 6px; }
+  .chip-rating { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .chip.is-added { opacity: 0.4; cursor: default; }
+  .chip.is-unpaid { border-color: var(--warn); color: var(--warn); }
+  .chip-group { display: inline-flex; }
+  .chip-group .chip:first-child:not(:last-child) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .chip-more { border-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; color: var(--accent); }
+
+  /* Seeding rows */
+  .seed-no { min-width: 28px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Demo bar: not part of the app -->
+<div class="m-bar small">
+  <div class="row wrap">
+    <strong>Mockup</strong>
+    <span class="muted">Theme</span>
+    <button class="btn sm" data-theme-set="blue">blue</button>
+    <button class="btn sm" data-theme-set="gray">gray</button>
+    <button class="btn sm" data-theme-set="esb">esb</button>
+    <span class="muted">View</span>
+    <button class="btn sm" data-view-go="list">Events list</button>
+    <button class="btn sm" data-view-go="wizard">New event wizard</button>
+    <button class="btn sm" data-view-go="seeding">Seeding</button>
+    <button class="btn sm" data-view-go="draft">Team drafting</button>
+    <button class="btn sm" data-view-go="time">Time estimate</button>
+  </div>
+  <div class="row wrap" data-ctx="list">
+    <span class="muted">State</span>
+    <label class="checkbox"><input type="checkbox" id="demoEmpty"> No events yet</label>
+  </div>
+  <div class="row wrap" data-ctx="wizard">
+    <span class="muted">Step</span>
+    <button class="btn sm" data-wstep="1">1</button>
+    <button class="btn sm" data-wstep="2">2</button>
+    <button class="btn sm" data-wstep="3">3</button>
+    <button class="btn sm" data-wstep="4">4</button>
+    <span class="muted">Step 4 calendar</span>
+    <select id="demoCal" aria-label="Calendar state">
+      <option value="ok">list</option>
+      <option value="loading">loading</option>
+      <option value="empty">empty</option>
+      <option value="err">error</option>
+    </select>
+    <label class="checkbox"><input type="checkbox" id="demoCreateErr"> Create fails</label>
+  </div>
+  <div class="row wrap" data-ctx="seeding">
+    <span class="muted">Mode</span>
+    <button class="btn sm" data-smode="none">not chosen</button>
+    <button class="btn sm" data-smode="seeded">seeding</button>
+    <button class="btn sm" data-smode="random">random</button>
+    <label class="checkbox"><input type="checkbox" id="demoLocked"> Bracket made (locked)</label>
+    <label class="checkbox"><input type="checkbox" id="demoNoTeams"> No teams</label>
+    <label class="checkbox"><input type="checkbox" id="demoSeedErr"> Save fails</label>
+  </div>
+  <div class="row wrap" data-ctx="draft">
+    <span class="muted">Helper</span>
+    <button class="btn sm" data-dstate="collapsed">collapsed</button>
+    <button class="btn sm" data-dstate="open">open</button>
+    <button class="btn sm" data-dstate="proposed">proposed teams</button>
+    <button class="btn sm" data-dstate="ask">replace or add?</button>
+    <button class="btn sm" data-dstate="few">too few players</button>
+    <button class="btn sm" data-dstate="over">too many for tickets</button>
+    <label class="checkbox"><input type="checkbox" id="demoNoTeamsD"> Event has no teams</label>
+  </div>
+  <div class="row wrap" data-ctx="time">
+    <span class="muted">Estimate for</span>
+    <select id="tTeams" aria-label="Teams"><option value="4">4 teams</option><option value="8" selected>8 teams</option><option value="16">16 teams</option></select>
+    <select id="tBracket" aria-label="Bracket"><option value="single">Single elimination</option><option value="double">Double elimination</option></select>
+    <select id="tMode" aria-label="Match type"><option value="standard">5v5</option><option value="wingman">Wingman 2v2</option></select>
+    <select id="tFinals" aria-label="Finals"><option value="1">BO1</option><option value="3">BO3</option></select>
+    <input type="time" id="tStart" value="18:30" aria-label="Start time">
+  </div>
+</div>
+
+<header class="topbar">
+  <a href="#" class="brand"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Example Club</a>
+  <nav class="nav">
+    <a href="#">Home</a>
+    <div class="dropdown">
+      <button class="nav-dropdown-toggle" data-dd>Section <i class="fa-solid fa-caret-down" aria-hidden="true"></i></button>
+      <div class="dropdown-menu" hidden>
+        <a class="dropdown-item" href="#">Item one</a>
+        <a class="dropdown-item" href="#">Item two</a>
+      </div>
+    </div>
+    <a href="#" class="active">Events</a>
+  </nav>
+  <div class="spacer"></div>
+  <div class="dropdown">
+    <button class="btn primary user-profile-button" data-dd><i class="fa-solid fa-circle-user" aria-hidden="true"></i> Hej Alex Example <i class="fa-solid fa-caret-down" aria-hidden="true"></i></button>
+    <div class="dropdown-menu" hidden>
+      <a class="dropdown-item" href="#" data-view-go="list"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Events</a>
+      <a class="dropdown-item" href="#"><i class="fa-solid fa-user" aria-hidden="true"></i> Profile</a>
+      <hr class="dropdown-divider">
+      <button class="dropdown-item"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Log ud</button>
+    </div>
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- ========== 1+2. Events list and wizard ========== -->
+  <section class="stack" data-view="list wizard">
+    <div class="row">
+      <h2>Events</h2>
+      <div class="spacer"></div>
+      <button class="btn primary" id="toggleNew">Opret event</button>
+    </div>
+    <p class="muted">Opret et event, og vælg hvordan hold og kampe skal laves. Klik på et event for at styre det.</p>
+
+    <div id="wiz" hidden></div>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>Event</th><th>Dato</th><th>Status</th></tr>
+        </thead>
+        <tbody id="evBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========== 3. Seeding ========== -->
+  <section class="stack" data-view="seeding">
+    <div class="row wrap">
+      <button class="btn ghost"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Tilbage til events</button>
+      <h2>Efterårs-LAN</h2>
+      <span class="badge info">LAN</span>
+    </div>
+    <h3>2. Seeding</h3>
+    <div id="seedHost"></div>
+  </section>
+
+  <!-- ========== 4. Team drafting ========== -->
+  <section class="stack" data-view="draft">
+    <div class="row wrap">
+      <button class="btn ghost"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Tilbage til events</button>
+      <h2>Eksempel-aften November</h2>
+      <span class="badge muted">Casual</span>
+    </div>
+    <div class="row">
+      <h3>1. Hold</h3>
+      <div class="spacer"></div>
+      <a href="#" class="btn ghost sm"><i class="fa-solid fa-book" aria-hidden="true"></i> Spillerregister</a>
+    </div>
+    <p class="muted">Skriv spillerne ind, giv dem et niveau, og lad hold-hjælperen fordele dem.</p>
+    <div id="helperHost"></div>
+    <div class="teamgrid" id="teamGrid"></div>
+  </section>
+
+  <!-- ========== 5. Time estimate ========== -->
+  <section class="stack" data-view="time">
+    <div class="row wrap">
+      <button class="btn ghost"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Tilbage til events</button>
+      <h2>Efterårs-LAN</h2>
+      <span class="badge info">LAN</span>
+    </div>
+    <div id="timeHost"></div>
+  </section>
+
+</main>
+
+<footer class="footer muted center-text">
+  <i>Example Club intranet (mockup, all data is fictional)</i>
+</footer>
+
+</div>
+
+<dialog class="modal wide" id="delTeamDlg">
+  <h2>Slet hold</h2>
+  <p id="delTeamMsg"></p>
+  <div class="row">
+    <button class="btn danger" id="delTeamOk">Slet hold</button>
+    <button class="btn ghost" id="delTeamNo">Annuller</button>
+  </div>
+</dialog>
+
+<script src="../../design.js"></script>
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ---------- theme ---------- */
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+    document.querySelectorAll("[data-theme-set]").forEach(function (b) { b.classList.toggle("on", b.dataset.themeSet === t); });
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "esb");
+  document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  /* ---------- dropdowns ---------- */
+  document.querySelectorAll("[data-dd]").forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var menu = b.parentNode.querySelector(".dropdown-menu");
+      var open = menu.hidden;
+      document.querySelectorAll(".dropdown-menu").forEach(function (m) { m.hidden = true; });
+      menu.hidden = !open;
+    });
+  });
+  document.addEventListener("click", function () { document.querySelectorAll(".dropdown-menu").forEach(function (m) { m.hidden = true; }); });
+  document.querySelectorAll(".dropdown-item[href='#']").forEach(function (a) { a.addEventListener("click", function (e) { e.preventDefault(); }); });
+
+  /* ---------- views ---------- */
+  var view = "list";
+  function go(v) {
+    view = v;
+    document.querySelectorAll("[data-view]").forEach(function (s) {
+      s.hidden = s.dataset.view.split(" ").indexOf(v) < 0;
+    });
+    document.querySelectorAll("[data-ctx]").forEach(function (s) { s.hidden = s.dataset.ctx !== v; });
+    document.querySelectorAll("button[data-view-go]").forEach(function (b) { b.classList.toggle("on", b.dataset.viewGo === v); });
+    if (v === "list") { wizOpen = false; }
+    if (v === "wizard") { wizOpen = true; if (!w.touched) resetWizard(); }
+    renderWizard();
+    if (v === "seeding") renderSeeding();
+    if (v === "draft") { renderHelper(); renderTeams(); }
+    if (v === "time") renderTime();
+  }
+  document.querySelectorAll("[data-view-go]").forEach(function (b) {
+    b.addEventListener("click", function (e) { e.preventDefault(); go(b.dataset.viewGo); });
+  });
+
+  /* ---------- events list ---------- */
+  var events = [
+    { name: "Efterårs-LAN", kind: "lan", date: "2026-11-07T16:00", format: "tournament", bracket: "double", bo: 3, active: true },
+    { name: "Eksempel-aften November", kind: "casual", date: "2026-11-12T18:00", format: "casual", bracket: "single", bo: 1 },
+    { name: "Wingman-cup", kind: "lan", date: "2026-10-03T13:00", format: "tournament", bracket: "single", bo: 1 },
+    { name: "Eksempel-aften Oktober", kind: "casual", date: "2026-10-01T18:00", format: "none", bracket: "none", bo: 1 },
+    { name: "Sommer-LAN", kind: "lan", date: "2026-07-18T12:00", format: "casual", bracket: "none", bo: 1, archived: true }
+  ];
+  function dkDate(iso) {
+    var d = new Date(iso);
+    return d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
+  }
+  function dkDateTime(iso) {
+    var d = new Date(iso), p = function (n) { return String(n).padStart(2, "0"); };
+    var m = ["jan.", "feb.", "mar.", "apr.", "maj", "jun.", "jul.", "aug.", "sep.", "okt.", "nov.", "dec."][d.getMonth()];
+    return d.getDate() + ". " + m + " " + d.getFullYear() + " " + p(d.getHours()) + "." + p(d.getMinutes());
+  }
+  function renderList() {
+    var body = $("evBody");
+    var list = $("demoEmpty").checked ? [] : events;
+    if (!list.length) { body.innerHTML = '<tr><td colspan="3" class="muted">Ingen events endnu - opret et.</td></tr>'; return; }
+    body.innerHTML = list.map(function (ev, i) {
+      var b = '<span class="badge ' + (ev.kind === "lan" ? "info" : "muted") + '">' + (ev.kind === "lan" ? "LAN" : "Casual") + "</span>";
+      if (ev.format !== "none") {
+        b += ' <span class="badge muted">' + (ev.format === "tournament" ? "Turnering" : "Casual-scramble") + "</span>";
+        if (ev.bracket !== "none") b += ' <span class="badge muted">' + (ev.bracket === "double" ? "Double elim." : "Single elim.") + "</span>";
+        if (ev.bracket !== "none" && ev.bo === 3) b += ' <span class="badge muted">BO3</span>';
+      }
+      var st = ev.active ? '<span class="badge ok">Kører nu</span>' : ev.archived ? '<span class="badge muted">Arkiveret</span>' : '<span class="badge info">Klar</span>';
+      return '<tr class="clickable" data-i="' + i + '"><td>' + esc(ev.name) + " " + b + "</td><td>" + dkDate(ev.date) + "</td><td>" + st + "</td></tr>";
+    }).join("");
+  }
+  dsRowClick($("evBody"), function (tr) {
+    var ev = events[+tr.dataset.i];
+    if (ev) dsToast("Åbner " + ev.name + " (eventsiden ligger i events-detail.html)", "info");
+  });
+  $("demoEmpty").addEventListener("change", renderList);
+  $("toggleNew").addEventListener("click", function () { go(wizOpen ? "list" : "wizard"); });
+
+  /* ---------- wizard ---------- */
+  var wizOpen = false;
+  var w;
+  function resetWizard() {
+    w = { step: 1, format: null, mode: null, bracket: null, finals: null, name: "", kind: "casual", date: "2026-11-04T10:00", notes: "", busy: false, err: "", touched: false };
+  }
+  resetWizard();
+  var FORMAT_LABEL = { tournament: "Turneringsformat", casual: "Casualformat", none: "Ingen format" };
+  var MODE_LABEL = { standard: "Almindelig 5v5", wingman: "Wingman 2v2" };
+  var BRACKET_LABEL = { single: "Single Elimination", double: "Double Elimination", none: "Ingen bracket" };
+  var upcoming = [
+    { title: "Eksempel-aften", start: "2026-11-12T18:00" },
+    { title: "Vinter-LAN", start: "2026-12-05T16:00" },
+    { title: "Eksempel-aften", start: "2026-12-10T18:00" },
+    { title: "Juleturnering LAN", start: "2026-12-19T12:00" }
+  ];
+  function card(icon, title, sub, on, attr) {
+    return '<button type="button" class="btn choice' + (on ? " on" : "") + '" ' + attr + '><i class="fa-solid ' + icon + '" aria-hidden="true"></i><b>' + title + '</b><span class="choice-hint">' + sub + "</span></button>";
+  }
+  function isPicked(ev) { return w.name === ev.title && (!ev.start || w.date === ev.start); }
+
+  function renderWizard() {
+    var host = $("wiz");
+    host.hidden = !wizOpen;
+    $("toggleNew").textContent = wizOpen ? "Luk" : "Opret event";
+    document.querySelectorAll("[data-wstep]").forEach(function (b) { b.classList.toggle("on", wizOpen && +b.dataset.wstep === w.step); });
+    if (!wizOpen) { host.innerHTML = ""; return; }
+    var none = w.format === "none";
+    var steps = [[1, "Format", false], [2, "Kampe", none], [3, "Bracket", none], [4, "Detaljer", false]];
+    var h = '<div class="card"><ol class="wizard-steps">' + steps.map(function (s) {
+      var cls = [s[0] === w.step ? "current" : "", s[0] < w.step && !s[2] ? "done" : "", s[2] ? "skipped" : ""].filter(Boolean).join(" ");
+      return '<li class="' + cls + '"><span class="wizard-dot">' + (s[0] < w.step && !s[2] ? '<i class="fa-solid fa-check" aria-hidden="true"></i>' : s[0]) + '</span><span class="wizard-label">' + s[1] + "</span></li>";
+    }).join("") + "</ol>";
+    var nav = function (back) {
+      return '<div class="row">' + (back ? '<button type="button" class="btn ghost" data-act="back">Tilbage</button>' : "") + '<button type="button" class="btn ghost" data-act="cancel">Annuller</button></div>';
+    };
+    if (w.step === 1) {
+      h += "<h3>Hvordan skal eventet køre?</h3><div class=\"choice-grid\">" +
+        card("fa-trophy", "Turneringsformat", "Foruddefinerede hold", w.format === "tournament", 'data-fmt="tournament"') +
+        card("fa-shuffle", "Casualformat", "Vi skaber holdene", w.format === "casual", 'data-fmt="casual"') +
+        card("fa-pen-to-square", "Ingen format", "Du styrer selv hold og kampe", w.format === "none", 'data-fmt="none"') + "</div>" + nav(false);
+    } else if (w.step === 2) {
+      h += "<h3>Hvilken slags kampe?</h3><div class=\"choice-grid\">" +
+        card("fa-users", "Almindelig 5v5", "Normale kampe med fem mod fem", w.mode === "standard", 'data-mode="standard"') +
+        card("fa-user-group", "Wingman 2v2", "Korte kampe med to mod to", w.mode === "wingman", 'data-mode="wingman"') + "</div>" + nav(true);
+    } else if (w.step === 3) {
+      h += "<h3>Skal der laves en bracket?</h3><div class=\"choice-grid\">" +
+        card("fa-sitemap", "Single Elimination", "Taber man, er man ude", w.bracket === "single", 'data-br="single"') +
+        card("fa-code-branch", "Double Elimination", "Man er først ude efter to nederlag", w.bracket === "double", 'data-br="double"') +
+        card("fa-people-group", "Ingen bracket", "Vi laver bare holdene - du står selv for kampene", w.bracket === "none", 'data-br="none"') + "</div>";
+      if (w.bracket === "single" || w.bracket === "double") {
+        h += "<h3>Skal finalerne spilles som BO3?</h3><div class=\"choice-grid\">" +
+          card("fa-crosshairs", "BO1", "Én kamp i hver finale", w.finals === 1, 'data-fin="1"') +
+          card("fa-layer-group", "BO3", "Bedst af tre maps i finalerne", w.finals === 3, 'data-fin="3"') + "</div>";
+      }
+      h += nav(true);
+    } else {
+      var fmt = w.format || "none", brk = fmt === "none" ? "none" : (w.bracket || "none"), bo = brk === "none" ? 1 : (w.finals || 1);
+      h += '<form class="stack" id="wizForm" novalidate><h3>Nyt event</h3><div class="row wrap"><span class="badge info">' + FORMAT_LABEL[fmt] + "</span>";
+      if (fmt !== "none") h += '<span class="badge muted">' + MODE_LABEL[w.mode || "standard"] + '</span><span class="badge muted">' + BRACKET_LABEL[brk] + "</span>";
+      if (bo === 3) h += '<span class="badge muted">BO3</span>';
+      h += '<button type="button" class="btn ghost sm" data-act="restart">Skift</button></div>';
+      h += '<label>Fra kalenderen';
+      var cs = $("demoCal").value;
+      if (cs === "err") h += '<span class="muted small">Kunne ikke hente kalenderen (502 Bad Gateway) - udfyld felterne manuelt.</span>';
+      else if (cs === "loading") h += '<span class="muted small">Henter kalenderen…</span>';
+      else if (cs === "empty") h += '<span class="muted small">Ingen kommende events i kalenderen.</span>';
+      else {
+        h += '<div class="cal-list">' + upcoming.map(function (ev, i) {
+          return '<button type="button" class="cal-item' + (isPicked(ev) ? " on" : "") + '" aria-pressed="' + isPicked(ev) + '" data-cal="' + i + '"><span class="cal-title">' + esc(ev.title) + '</span><span class="cal-date">' + dkDateTime(ev.start) + "</span></button>";
+        }).join("") + "</div>";
+      }
+      h += '</label><div class="grid2">' +
+        '<label>Type<select id="wKind"><option value="casual"' + (w.kind === "casual" ? " selected" : "") + '>Casual</option><option value="lan"' + (w.kind === "lan" ? " selected" : "") + ">LAN</option></select></label>" +
+        '<label>Navn<input id="wName" value="' + esc(w.name) + '" placeholder="' + (w.kind === "lan" ? "Eksempel-LAN" : "Eksempel-aften") + '" required></label>' +
+        '<label>Dato<input id="wDate" type="datetime-local" value="' + esc(w.date) + '" required></label>' +
+        '<label>Noter<input id="wNotes" value="' + esc(w.notes) + '"></label></div>';
+      if (w.err) h += '<div class="error">' + esc(w.err) + "</div>";
+      h += '<div class="row"><button class="btn primary"' + (w.busy ? " disabled" : "") + ">" + (w.busy ? "Opretter…" : "Opret event") + '</button><button type="button" class="btn ghost" data-act="cancel">Annuller</button></div></form>';
+    }
+    host.innerHTML = h + "</div>";
+    bindWizard();
+  }
+
+  function bindWizard() {
+    var host = $("wiz");
+    function on(sel, fn) { host.querySelectorAll(sel).forEach(function (el) { el.addEventListener("click", function () { w.touched = true; fn(el); }); }); }
+    on("[data-fmt]", function (el) {
+      w.format = el.dataset.fmt;
+      w.kind = w.format === "tournament" ? "lan" : "casual";
+      if (w.format === "none") { w.bracket = "none"; w.step = 4; } else w.step = 2;
+      renderWizard();
+    });
+    on("[data-mode]", function (el) { w.mode = el.dataset.mode; w.step = 3; renderWizard(); });
+    on("[data-br]", function (el) { w.bracket = el.dataset.br; w.finals = null; if (w.bracket === "none") w.step = 4; renderWizard(); });
+    on("[data-fin]", function (el) { w.finals = +el.dataset.fin; w.step = 4; renderWizard(); });
+    on("[data-act]", function (el) {
+      var a = el.dataset.act;
+      if (a === "back") { w.step = w.step === 4 && w.format === "none" ? 1 : w.step - 1; renderWizard(); }
+      else if (a === "restart") { w.step = 1; renderWizard(); }
+      else { resetWizard(); go("list"); }
+    });
+    on("[data-cal]", function (el) {
+      var ev = upcoming[+el.dataset.cal];
+      w.name = ev.title; w.kind = /\blan\b/i.test(ev.title) ? "lan" : "casual"; w.date = ev.start;
+      renderWizard();
+    });
+    var form = $("wizForm");
+    if (!form) return;
+    $("wKind").addEventListener("change", function (e) { w.kind = e.target.value; $("wName").placeholder = w.kind === "lan" ? "Eksempel-LAN" : "Eksempel-aften"; });
+    $("wName").addEventListener("input", function (e) { w.name = e.target.value; w.touched = true; dsFieldError(e.target, ""); host.querySelectorAll(".cal-item").forEach(function (b, i) { var p = isPicked(upcoming[i]); b.classList.toggle("on", p); b.setAttribute("aria-pressed", p); }); });
+    $("wDate").addEventListener("input", function (e) { w.date = e.target.value; dsFieldError(e.target, ""); host.querySelectorAll(".cal-item").forEach(function (b, i) { var p = isPicked(upcoming[i]); b.classList.toggle("on", p); b.setAttribute("aria-pressed", p); }); });
+    $("wNotes").addEventListener("input", function (e) { w.notes = e.target.value; });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var ok = true;
+      dsFieldError($("wName"), ""); dsFieldError($("wDate"), "");
+      if (!w.name.trim()) { dsFieldError($("wName"), "Navn skal udfyldes."); ok = false; }
+      if (!w.date) { dsFieldError($("wDate"), "Dato skal udfyldes."); ok = false; }
+      if (!ok) return;
+      w.busy = true; w.err = ""; renderWizard();
+      setTimeout(function () {
+        w.busy = false;
+        if ($("demoCreateErr").checked) { w.err = "Kunne ikke oprette eventet: 409 Conflict - der findes allerede et event med det navn."; renderWizard(); return; }
+        var fmt = w.format || "none", brk = fmt === "none" ? "none" : (w.bracket || "none");
+        events.unshift({ name: w.name, kind: w.kind, date: w.date, format: fmt, bracket: brk, bo: brk === "none" ? 1 : (w.finals || 1) });
+        dsToast("Eventet er oprettet", "ok");
+        resetWizard(); renderList(); go("list");
+      }, 500);
+    });
+  }
+  document.querySelectorAll("[data-wstep]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (view !== "wizard") go("wizard");
+      var n = +b.dataset.wstep;
+      w.touched = true;
+      if (n >= 2 && !w.format) w.format = "tournament";
+      if (n >= 3 && !w.mode) w.mode = "standard";
+      if (n === 4 && !w.bracket) w.bracket = "single";
+      w.step = n; renderWizard();
+    });
+  });
+  $("demoCal").addEventListener("change", renderWizard);
+
+  /* ---------- seeding ---------- */
+  var seedTeams = [
+    { id: "a", label: "Røde Ræve" }, { id: "b", label: "Nordlyset" }, { id: "c", label: "PC-A" },
+    { id: "d", label: "Lakridspiraterne" }, { id: "e", label: "Hold 5" }, { id: "f", label: "Vestenvind" }
+  ];
+  var seed = { mode: "seeded", order: seedTeams.map(function (t) { return t.id; }), dirty: false, allSeeded: false, busy: false, err: "" };
+  var lockedSeeds = [["Røde Ræve", 1], ["Nordlyset", 2], ["PC-A", 3], ["Lakridspiraterne", 4], ["Hold 5", 5], ["Vestenvind", 6]];
+  function teamName(id) { return seedTeams.filter(function (t) { return t.id === id; })[0].label; }
+  function renderSeeding() {
+    document.querySelectorAll("[data-smode]").forEach(function (b) { b.classList.toggle("on", b.dataset.smode === String(seed.mode || "none")); });
+    var host = $("seedHost"), noTeams = $("demoNoTeams").checked;
+    if ($("demoLocked").checked) {
+      host.innerHTML = '<div class="card stack"><div class="stack" style="gap:6px">' + lockedSeeds.map(function (s) {
+        return '<div class="row" style="gap:8px"><b class="seed-no">' + s[1] + '</b><span class="grow">' + esc(s[0]) + "</span></div>";
+      }).join("") + '</div><div class="muted small">Seeding er låst, fordi bracketen er lavet. Slet bracketen for at ændre den.</div></div>';
+      return;
+    }
+    var h = '<div class="stack"><div class="choice-grid">' +
+      card("fa-ranking-star", "Seeding", "Du bestemmer de bedste og de svageste hold", seed.mode === "seeded", 'data-seedmode="seeded"') +
+      card("fa-dice", "Tilfældig", "Holdene lodtrækkes", seed.mode === "random", 'data-seedmode="random"') + "</div>" +
+      '<p class="muted small">Vælger du tilfældig bracket, så er bracketen fuldstændig tilfældig. Vælger du derimod seeding, så skal du definere hvem der er de bedste og svageste hold. Fordelene ved seeding er at to stærke hold ikke møder hinanden fra start, så der er chance for en god finale. Ulempen er at der er større chance for at det dårlige hold ryger ud hurtigst.</p>';
+    if (seed.mode === "seeded") {
+      var order = noTeams ? [] : seed.order;
+      h += '<div class="card stack"><p class="muted small">Seed 1 er det stærkeste hold. Høj møder lav i første runde.</p>';
+      if (noTeams) h += '<div class="muted small">Ingen hold endnu.</div>';
+      h += '<div class="stack" style="gap:6px">' + order.map(function (id, i) {
+        return '<div class="row" style="gap:8px"><b class="seed-no">' + (i + 1) + '</b><span class="grow">' + esc(teamName(id)) + "</span>" +
+          '<button class="btn ghost sm" type="button" title="Op" data-mv="' + i + '|-1"' + (i === 0 ? " disabled" : "") + '><i class="fa-solid fa-arrow-up" aria-hidden="true"></i></button>' +
+          '<button class="btn ghost sm" type="button" title="Ned" data-mv="' + i + '|1"' + (i === order.length - 1 ? " disabled" : "") + '><i class="fa-solid fa-arrow-down" aria-hidden="true"></i></button></div>';
+      }).join("") + "</div>";
+      h += '<div class="row wrap" style="gap:8px"><button class="btn primary" type="button" id="seedSave"' + (seed.busy || noTeams || (!seed.dirty && seed.allSeeded) ? " disabled" : "") + ">" + (seed.busy ? "Gemmer…" : "Gem seeding") + "</button>" +
+        '<button class="btn" type="button" id="seedShuffle"' + (order.length < 2 ? " disabled" : "") + '><i class="fa-solid fa-shuffle" aria-hidden="true"></i> Bland tilfældigt</button>' +
+        (seed.dirty ? '<span class="muted small">Ikke gemt</span>' : "") + "</div>";
+      if (seed.err) h += '<div class="error">' + esc(seed.err) + "</div>";
+      h += "</div>";
+    }
+    host.innerHTML = h + "</div>";
+    host.querySelectorAll("[data-seedmode]").forEach(function (b) { b.addEventListener("click", function () { seed.mode = b.dataset.seedmode; renderSeeding(); }); });
+    host.querySelectorAll("[data-mv]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var p = b.dataset.mv.split("|"), i = +p[0], j = i + +p[1], o = seed.order;
+        var t = o[i]; o[i] = o[j]; o[j] = t; seed.dirty = true; renderSeeding();
+      });
+    });
+    var sh = $("seedShuffle");
+    if (sh) sh.addEventListener("click", function () {
+      var o = seed.order;
+      for (var i = o.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = o[i]; o[i] = o[j]; o[j] = t; }
+      seed.dirty = true; renderSeeding();
+    });
+    var sv = $("seedSave");
+    if (sv) sv.addEventListener("click", function () {
+      seed.busy = true; seed.err = ""; renderSeeding();
+      setTimeout(function () {
+        seed.busy = false;
+        if ($("demoSeedErr").checked) seed.err = "Kunne ikke gemme seeding: 500 Internal Server Error";
+        else { seed.dirty = false; seed.allSeeded = true; dsToast("Seeding gemt", "ok"); }
+        renderSeeding();
+      }, 400);
+    });
+  }
+  document.querySelectorAll("[data-smode]").forEach(function (b) {
+    b.addEventListener("click", function () { seed.mode = b.dataset.smode === "none" ? null : b.dataset.smode; renderSeeding(); });
+  });
+  ["demoLocked", "demoNoTeams", "demoSeedErr"].forEach(function (id) { $(id).addEventListener("change", renderSeeding); });
+
+  /* ---------- team drafting ---------- */
+  var groups = ["PC-A", "PC-B", "PC-C"];
+  var register = [["Frostbid", 8], ["Pandekage", 5], ["Lakridspige", 6], ["Vindmølle", 7], ["Trolden", 3], ["Rugbrød", 9], ["Skovmand", 5], ["Isbjørn", 6]];
+  var tickets = [
+    { name: "Frostbid", tickets: 1, paid: 1, rating: 8 }, { name: "Tordenhest", tickets: 3, paid: 3 },
+    { name: "Mælkeskum", tickets: 1, paid: 0 }, { name: "Pandekage", tickets: 1, paid: 1, rating: 5 },
+    { name: "Lakridspige", tickets: 1, paid: 1, rating: 6 }, { name: "Havregryn", tickets: 1, paid: 1 },
+    { name: "Kanelsnegl", tickets: 1, paid: 1 }
+  ];
+  var paidTotal = tickets.reduce(function (n, t) { return n + t.paid; }, 0);
+  function norm(s) { return s.trim().replace(/\s+/g, " ").toLowerCase(); }
+  function regRating(name) { var r = register.filter(function (x) { return norm(x[0]) === norm(name); })[0]; return r ? r[1] : undefined; }
+  function initialPlayers() {
+    return [
+      { name: "Frostbid", rating: 8, rated: true, fromRegister: true, ticketName: "Frostbid" },
+      { name: "Pandekage", rating: 5, rated: true, fromRegister: true, ticketName: "Pandekage" },
+      { name: "Lakridspige", rating: 6, rated: true, fromRegister: true, ticketName: "Lakridspige" },
+      { name: "Mælkeskum", rating: 5, ticketName: "Mælkeskum" },
+      { name: "Bjørn", rating: 4, rated: true, ticketName: "Havregryn" },
+      { name: "Tordenhest", rating: 7, rated: true, ticketName: "Tordenhest" },
+      { name: "Tordenhest (gæst 1)", rating: 5, ticketName: "Tordenhest" },
+      { name: "Kanelsnegl", rating: 3, rated: true, ticketName: "Kanelsnegl" },
+      { name: "", rating: 5 }
+    ];
+  }
+  var D = { open: false, players: initialPlayers(), count: null, suggestion: null, tags: [], err: "", ask: false, busy: false, regFilter: "" };
+  var teams = [
+    { name: "Røde Ræve", tag: "", players: ["Rugbrød", "Skovmand", "Isbjørn"], err: "" },
+    { name: "", tag: "PC-A", players: [], err: "" },
+    { name: "Nordlyset", tag: "PC-B", players: ["Vindmølle"], err: "" }
+  ];
+  var addTeam = { name: "", tag: "" };
+
+  function named() { return D.players.filter(function (p) { return p.name.trim(); }); }
+  function claimed() {
+    var s = {};
+    named().forEach(function (p) { s[norm(p.name)] = 1; if (p.ticketName) s[norm(p.ticketName)] = 1; });
+    return s;
+  }
+  function recommended() { return Math.min(8, Math.max(2, Math.round(named().length / 5))); }
+  function teamCount() { return D.count === null ? recommended() : D.count; }
+  function sum(t) { return t.reduce(function (s, p) { return s + p.rating; }, 0); }
+  function avg(t) { return t.length ? sum(t) / t.length : 0; }
+  function balance(ps, n) {
+    var s = ps.slice().sort(function (a, b) { return b.rating - a.rating; }), out = [];
+    for (var i = 0; i < n; i++) out.push([]);
+    s.forEach(function (p, i) { var r = Math.floor(i / n), pos = i % n; out[r % 2 === 0 ? pos : n - 1 - pos].push(p); });
+    return out;
+  }
+  function scramble(ps, n) {
+    var s = ps.slice().sort(function (a, b) { return b.rating - a.rating; }), out = [], i;
+    for (i = 0; i < n; i++) out.push([]);
+    for (i = 0; i < s.length; i += n) {
+      var idx = []; for (var k = 0; k < n; k++) idx.push(k);
+      for (k = n - 1; k > 0; k--) { var j = Math.floor(Math.random() * (k + 1)), t = idx[k]; idx[k] = idx[j]; idx[j] = t; }
+      s.slice(i, i + n).forEach(function (p, q) { out[idx[q]].push(p); });
+    }
+    return out;
+  }
+  function tagPick(value, attr) {
+    var chips = value && groups.indexOf(value) < 0 ? [value].concat(groups) : groups;
+    return '<div class="tagpick">' + chips.map(function (t) {
+      return '<button type="button" class="badge ' + (value === t ? "info sel" : "muted") + '" ' + attr + '="' + esc(t) + '">' + esc(t) + "</button>";
+    }).join("") + "</div>";
+  }
+
+  function chip(p, added, isReg) {
+    var known = p.rating !== undefined, unpaid = !isReg && p.paid === 0, cross = !isReg && known;
+    var title = added ? "Allerede på listen" : isReg ? "Kendt i registret (rating " + p.rating + ") - ingen billet på dette event" :
+      cross ? "Har billet og er kendt i registret (rating " + p.rating + ")" : "Har billet" + (unpaid ? ", ikke betalt" : "") + " - ny i registret";
+    var h = '<span class="chip-group"><button type="button" class="chip' + (added ? " is-added" : unpaid ? " is-unpaid" : "") + '" title="' + title + '"' + (added ? " disabled" : "") + ' data-add="' + esc(p.name) + '">' +
+      (cross ? '<i class="fa-solid fa-book" aria-hidden="true"></i>' : "") + esc(p.name) + (known ? '<span class="chip-rating">' + p.rating + "</span>" : "") + (unpaid ? '<span title="Ikke betalt">⏳</span>' : "") + "</button>";
+    if (!isReg && p.tickets > 1) h += '<button type="button" class="chip chip-more" title="Ordren dækker ' + p.tickets + " billetter - tilføj " + (p.tickets - 1) + ' pladser at navngive" data-addseats="' + esc(p.name) + '">+' + (p.tickets - 1) + "</button>";
+    return h + "</span>";
+  }
+
+  function rowHtml(p, i) {
+    var stored = regRating(p.name), savedR = p.name.trim() !== "" && stored === p.rating;
+    var taken = claimed();
+    var free = register.filter(function (r) { return !taken[norm(r[0])]; });
+    var cell3;
+    if (p.fromRegister && !p.undo) cell3 = '<span class="badge muted" title="Rating hentet fra spillerregistret - klik en rating for at overstyre"><i class="fa-solid fa-book" aria-hidden="true"></i> register</span>';
+    else if (!free.length) cell3 = "";
+    else cell3 = '<select data-regpick="' + i + '" title="Kendt under et andet navn i registret? Vælg det - billetten forbliver brugt."><option value="">Vælg fra register</option>' +
+      free.map(function (r) { return '<option value="' + esc(r[0]) + '">' + esc(r[0]) + " · " + r[1] + "</option>"; }).join("") + "</select>";
+    var tk = p.ticketName && norm(p.ticketName) !== norm(p.name) ? '<span class="badge muted" title="Billetten &quot;' + esc(p.ticketName) + '&quot; er brugt på denne række"><i class="fa-solid fa-ticket" aria-hidden="true"></i> ' + esc(p.ticketName) + "</span>" : "";
+    var r = "";
+    for (var n = 1; n <= 10; n++) r += '<button type="button" class="' + (n <= p.rating ? "on" : "") + '" title="Rating ' + n + '" data-rate="' + i + "|" + n + '">' + n + "</button>";
+    return '<div class="draft-row"><input placeholder="Spiller ' + (i + 1) + '" value="' + esc(p.name) + '" data-pname="' + i + '"><span class="draft-cell">' + tk + '</span><span class="draft-cell">' + cell3 + '</span><div class="rating">' + r + "</div>" +
+      '<button class="btn ghost sm" type="button" title="' + (savedR ? "Gemt i registret" : "Gem i register") + '" data-savereg="' + i + '"' + (!p.name.trim() || savedR ? " disabled" : "") + '><i class="fa-solid ' + (savedR ? "fa-check" : "fa-floppy-disk") + '" aria-hidden="true"></i></button>' +
+      '<button class="btn ghost sm danger" type="button" title="Fjern" data-rm="' + i + '"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>';
+  }
+
+  function renderHelper() {
+    document.querySelectorAll("[data-dstate]").forEach(function (b) { b.classList.remove("on"); });
+    var host = $("helperHost"), n = named().length;
+    if (!D.open) {
+      host.innerHTML = '<div class="row wrap" style="gap:8px"><button class="btn choice" id="openHelper"><span><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Hold-hjælper</span><span class="choice-hint">' +
+        (n > 0 ? n + " spillere står klar - lav nye hold uden at taste dem ind igen" : "Skriv spillerne ind, og få dem fordelt jævnt på hold efter rating") + "</span></button>" +
+        '<button class="btn choice" id="groupTeams"><span><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Opret hold fra grupper (' + groups.length + ')</span><span class="choice-hint">Ét tomt hold pr. PC-gruppe (' + groups.join(", ") + ') - uden spillere</span></button></div>';
+      $("openHelper").addEventListener("click", function () { D.open = true; renderHelper(); });
+      $("groupTeams").addEventListener("click", function () {
+        groups.forEach(function (g) { if (!teams.some(function (t) { return t.tag === g; })) teams.push({ name: "", tag: g, players: [], err: "" }); });
+        $("demoNoTeamsD").checked = false; renderTeams(); dsToast("Oprettede hold fra grupper", "ok");
+      });
+      return;
+    }
+    var ct = claimed(), h = '<div class="card stack"><div class="row"><h3>Hold-hjælper</h3><div class="spacer"></div><button class="btn ghost sm" id="closeHelper">Luk</button></div>' +
+      '<p class="muted small">Tilføj spillere, giv dem en rating fra 1-10, og få et forslag der fordeler dem jævnt. Ratings hentes fra <a href="#">spillerregistret</a>, men gemmes kun der når du trykker diskette-ikonet ud for rækken.</p>';
+    var regOnly = register.filter(function (r) { return !tickets.some(function (t) { return norm(t.name) === norm(r[0]); }); });
+    h += '<details class="reg" open><summary><i class="fa-solid fa-user-group" aria-hidden="true"></i> Deltagere<span class="muted small"> - ' + n + " tilføjet af " + paidTotal + ' billetter · klik et navn</span></summary><div class="stack" style="gap:12px;margin-top:8px">';
+    if (paidTotal > 0 && n > paidTotal) h += '<div class="error">' + n + " spillere på listen, men kun " + paidTotal + " billetter. Står nogen to gange - én gang under billetnavn og én gang under nickname?</div>";
+    h += '<div class="stack" style="gap:6px"><div class="row wrap" style="gap:8px"><b class="small"><i class="fa-solid fa-ticket" aria-hidden="true"></i> Har billet (' + paidTotal + ')</b><div class="spacer"></div>' +
+      '<button class="btn sm" type="button" id="addPaid" title="Tilføj hver betalt billet - køberen plus en række pr. ekstra plads at navngive">Tilføj alle betalte (' + paidTotal + ')</button></div><div class="chips">' +
+      tickets.map(function (t) { return chip(t, !!ct[norm(t.name)], false); }).join("") + "</div></div>";
+    h += '<div class="stack" style="gap:6px"><div class="row wrap" style="gap:8px"><b class="small"><i class="fa-solid fa-book" aria-hidden="true"></i> Kun i registret (' + regOnly.length + ')<span class="muted"> - ingen billet på dette event</span></b><div class="spacer"></div>' +
+      '<input placeholder="Søg spiller…" id="regFilter" value="' + esc(D.regFilter) + '" style="max-width:200px"></div><div class="chips scroll" id="regChips"></div></div>';
+    h += '<p class="muted small">Billet og nickname kobles kun på navnet - spiller en køber under et andet, så vælg det i rækkens register-dropdown. Billetten forbliver brugt.</p></div></details>';
+    h += '<div class="stack" id="draftRows"></div>';
+    h += '<div class="row wrap" style="gap:8px"><button class="btn sm" id="addRow" type="button">+ Spiller</button><div class="spacer"></div>' +
+      '<label class="row" style="gap:6px">Antal hold<input type="number" min="2" max="8" id="teamCount" value="' + teamCount() + '" style="width:60px">' +
+      (D.count !== null && teamCount() !== recommended() ? '<button class="btn ghost sm" type="button" id="recBtn" title="Brug den anbefalede fordeling">anbefalet: ' + recommended() + "</button>" : "") + "</label>" +
+      '<button class="btn primary" id="propose" type="button"' + (n === 0 ? " disabled" : "") + ">Foreslå hold</button>" +
+      (n > 0 ? '<button class="btn ghost" id="clearList" type="button" title="Tøm spillerlisten og start forfra">Ryd liste</button>' : "") + "</div>";
+    h += '<details><summary class="muted small">Indsæt liste (ét navn pr. linje, evt. "navn;rating")</summary><div class="row" style="gap:8px;margin-top:6px"><textarea class="grow" rows="4" id="bulk" placeholder="Frostbid;9&#10;Tordenhest;7&#10;Pandekage;6&#10;Kanelsnegl"></textarea><button class="btn sm" id="addBulk" type="button">Tilføj fra liste</button></div></details>';
+    if (D.err) h += '<div class="error">' + esc(D.err) + "</div>";
+    if (D.suggestion) {
+      var existing = !$("demoNoTeamsD").checked && teams.length > 0;
+      h += '<div class="stack"><div class="muted small">Træk spillere mellem holdene for at rette forslaget til. Scramble laver et nyt split på de samme spillere - dine træk går tabt.</div><div class="teamgrid">' +
+        D.suggestion.map(function (t, i) {
+          return '<div class="card"><div class="row" style="gap:6px"><span class="grow">' + tagPick(D.tags[i] || "", 'data-ptag="' + i + '" data-v') + '</span><span class="badge info" title="Snit · samlet rating">⌀' + avg(t).toFixed(1) + " · Σ" + sum(t) + '</span></div><ul class="playerlist">' +
+            t.map(function (p) { return '<li draggable="true" title="Træk spilleren over på et andet hold"><i class="fa-solid fa-grip-vertical drag-handle" aria-hidden="true"></i><span class="grow">' + esc(p.name) + '</span><span class="rating-badge">' + p.rating + "</span></li>"; }).join("") +
+            (t.length === 0 ? '<li class="muted small">Træk en spiller hertil</li>' : "") + "</ul></div>";
+        }).join("") + "</div>";
+      if (D.ask) {
+        h += '<div class="stack" style="gap:8px"><div class="muted small">Der er allerede ' + teams.length + ' hold på eventet. Hvad vil du gøre?</div><div class="row wrap" style="gap:8px">' +
+          '<button class="btn danger" type="button" data-create="replace">Slet nuværende og opret</button><button class="btn primary" type="button" data-create="add">Tilføj til eksisterende</button><button class="btn ghost" type="button" id="askNo">Fortryd</button></div></div>';
+      } else {
+        h += '<div class="row wrap" style="gap:8px"><button class="btn primary" type="button" id="confirmTeams">' + (D.busy ? "Opretter…" : "Bekræft - opret " + D.suggestion.length + " hold") + '</button><button class="btn" type="button" id="scramble"><i class="fa-solid fa-shuffle" aria-hidden="true"></i> Scramble</button></div>';
+      }
+      h += "</div>";
+      void existing;
+    }
+    host.innerHTML = h + "</div>";
+    renderRegChips(); renderRows(); bindHelper();
+  }
+  function renderRegChips() {
+    var el = $("regChips"); if (!el) return;
+    var ct = claimed(), f = norm(D.regFilter);
+    el.innerHTML = register.filter(function (r) { return !tickets.some(function (t) { return norm(t.name) === norm(r[0]); }) && (!f || norm(r[0]).indexOf(f) >= 0); })
+      .map(function (r) { return chip({ name: r[0], rating: r[1] }, !!ct[norm(r[0])], true); }).join("");
+    el.querySelectorAll("[data-add]").forEach(function (b) { b.addEventListener("click", function () { addRows([{ name: b.dataset.add }]); }); });
+  }
+  function renderRows() {
+    var el = $("draftRows"); if (!el) return;
+    el.innerHTML = D.players.map(rowHtml).join("");
+    el.querySelectorAll("[data-pname]").forEach(function (inp) {
+      var i = +inp.dataset.pname;
+      inp.addEventListener("input", function () { D.players[i].name = inp.value; });
+      inp.addEventListener("blur", function () {
+        var p = D.players[i], s = regRating(p.name);
+        if (p && !p.rated && s !== undefined) { p.rating = s; p.fromRegister = true; p.rated = true; invalidate(); renderRows(); }
+      });
+      inp.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return; e.preventDefault();
+        if (i === D.players.length - 1) { D.players.push({ name: "", rating: 5 }); renderRows(); el.querySelectorAll("[data-pname]")[i + 1].focus(); }
+        else el.querySelectorAll("[data-pname]")[i + 1].focus();
+      });
+    });
+    el.querySelectorAll("[data-rate]").forEach(function (b) {
+      b.addEventListener("click", function () { var p = b.dataset.rate.split("|"); var r = D.players[+p[0]]; r.rating = +p[1]; r.rated = true; r.fromRegister = false; invalidate(); renderRows(); });
+    });
+    el.querySelectorAll("[data-rm]").forEach(function (b) {
+      b.addEventListener("click", function () { if (D.players.length > 1) D.players.splice(+b.dataset.rm, 1); invalidate(); renderHelper(); });
+    });
+    el.querySelectorAll("[data-savereg]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var p = D.players[+b.dataset.savereg], k = norm(p.name), f = register.filter(function (r) { return norm(r[0]) === k; })[0];
+        if (f) f[1] = p.rating; else register.push([p.name.trim(), p.rating]);
+        dsToast("Gemt i spillerregistret", "ok"); renderHelper();
+      });
+    });
+    el.querySelectorAll("[data-regpick]").forEach(function (s) {
+      s.addEventListener("change", function () {
+        if (!s.value) return;
+        var p = D.players[+s.dataset.regpick], r = register.filter(function (x) { return x[0] === s.value; })[0];
+        p.undo = { name: p.name, rating: p.rating, rated: p.rated }; p.name = r[0]; p.rating = r[1]; p.rated = true; p.fromRegister = true;
+        invalidate(); renderHelper();
+      });
+    });
+  }
+  function invalidate() { D.suggestion = null; D.ask = false; }
+  function addRows(entries) {
+    var seen = claimed(), rows = [];
+    entries.forEach(function (e) {
+      var name = e.name.trim(), k = norm(name);
+      if (!name || seen[k]) return; seen[k] = 1;
+      var st = regRating(name);
+      rows.push({ name: name, ticketName: e.ticketName, rating: e.rating || st || 5, rated: e.rating !== undefined || st !== undefined, fromRegister: e.rating === undefined && st !== undefined });
+    });
+    if (!rows.length) return;
+    D.players = D.players.filter(function (p) { return p.name.trim(); }).concat(rows);
+    invalidate(); renderHelper();
+  }
+  function seatNames(name, seats) { var o = [name]; for (var i = 1; i < seats; i++) o.push(name + " (gæst " + i + ")"); return o; }
+  function bindHelper() {
+    var host = $("helperHost");
+    $("closeHelper").addEventListener("click", function () { D.open = false; renderHelper(); });
+    $("regFilter").addEventListener("input", function (e) { D.regFilter = e.target.value; renderRegChips(); });
+    host.querySelectorAll(".chips:not(.scroll) [data-add]").forEach(function (b) {
+      b.addEventListener("click", function () { addRows([{ name: b.dataset.add, ticketName: b.dataset.add }]); });
+    });
+    host.querySelectorAll("[data-addseats]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var t = tickets.filter(function (x) { return x.name === b.dataset.addseats; })[0];
+        addRows(seatNames(t.name, t.tickets).map(function (nm) { return { name: nm, ticketName: t.name }; }));
+      });
+    });
+    $("addPaid").addEventListener("click", function () {
+      var out = [];
+      tickets.filter(function (t) { return t.paid > 0; }).forEach(function (t) { seatNames(t.name, t.paid).forEach(function (nm) { out.push({ name: nm, ticketName: t.name }); }); });
+      addRows(out);
+    });
+    $("addRow").addEventListener("click", function () { D.players.push({ name: "", rating: 5 }); renderRows(); });
+    $("teamCount").addEventListener("change", function (e) { D.count = Math.min(8, Math.max(2, Number(e.target.value) || 2)); D.tags = []; invalidate(); renderHelper(); });
+    var rb = $("recBtn"); if (rb) rb.addEventListener("click", function () { D.count = null; D.tags = []; invalidate(); renderHelper(); });
+    $("propose").addEventListener("click", function () { propose(balance); });
+    var cl = $("clearList"); if (cl) cl.addEventListener("click", function () { D.players = [{ name: "", rating: 5 }]; D.tags = []; invalidate(); renderHelper(); });
+    $("addBulk").addEventListener("click", function () {
+      var out = [];
+      $("bulk").value.split("\n").forEach(function (line) {
+        var p = line.trim().split(/[;,\t]/), nm = (p[0] || "").trim(), r = Number(p[1]);
+        if (nm) out.push({ name: nm, rating: r ? Math.min(10, Math.max(1, r)) : undefined });
+      });
+      addRows(out);
+    });
+    host.querySelectorAll("[data-ptag]").forEach(function (b) {
+      b.addEventListener("click", function () { var i = +b.dataset.ptag; D.tags[i] = D.tags[i] === b.dataset.v ? "" : b.dataset.v; renderHelper(); });
+    });
+    var cf = $("confirmTeams"); if (cf) cf.addEventListener("click", function () {
+      if (!$("demoNoTeamsD").checked && teams.length > 0) { D.ask = true; renderHelper(); } else createTeams(false);
+    });
+    var sc = $("scramble"); if (sc) sc.addEventListener("click", function () { propose(scramble); });
+    var an = $("askNo"); if (an) an.addEventListener("click", function () { D.ask = false; renderHelper(); });
+    host.querySelectorAll("[data-create]").forEach(function (b) { b.addEventListener("click", function () { createTeams(b.dataset.create === "replace"); }); });
+  }
+  function propose(fn) {
+    D.err = "";
+    var n = named().length, c = teamCount();
+    if (n < c) { D.err = "Mindst " + c + " spillere kræves for " + c + " hold."; D.suggestion = null; renderHelper(); return; }
+    D.suggestion = fn(named(), c);
+    if (D.tags.length !== D.suggestion.length) D.tags = D.suggestion.map(function (_, i) { return groups[i] || ""; });
+    D.ask = false; renderHelper();
+  }
+  function createTeams(replace) {
+    if (replace) teams = [];
+    D.suggestion.forEach(function (t, i) {
+      var tag = D.tags[i] || groups[i] || "";
+      teams.push({ name: tag ? "" : "Hold " + (i + 1), tag: tag, players: t.map(function (p) { return p.name.trim(); }), err: "" });
+    });
+    D.suggestion = null; D.tags = []; D.open = false; D.ask = false;
+    $("demoNoTeamsD").checked = false;
+    dsToast("Holdene er oprettet", "ok"); renderHelper(); renderTeams();
+  }
+  document.querySelectorAll("[data-dstate]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var s = b.dataset.dstate;
+      D.err = ""; D.ask = false; D.suggestion = null; D.count = null; D.tags = [];
+      D.players = initialPlayers();
+      if (s === "collapsed") D.open = false;
+      else {
+        D.open = true;
+        if (s === "few") { D.players = [{ name: "Frostbid", rating: 8, rated: true, fromRegister: true, ticketName: "Frostbid" }, { name: "Pandekage", rating: 5, rated: true, fromRegister: true, ticketName: "Pandekage" }]; D.count = 4; propose(balance); }
+        if (s === "proposed" || s === "ask") { propose(balance); }
+        if (s === "ask") { D.ask = true; $("demoNoTeamsD").checked = false; renderTeams(); }
+        if (s === "over") {
+          D.players = D.players.filter(function (p) { return p.name.trim(); }).concat([{ name: "Rugbrød", rating: 9, rated: true, fromRegister: true }, { name: "Skovmand", rating: 5, rated: true, fromRegister: true }, { name: "Isbjørn", rating: 6, rated: true, fromRegister: true }, { name: "Vindmølle", rating: 7, rated: true, fromRegister: true }]);
+        }
+      }
+      renderHelper();
+      var cur = document.querySelector('[data-dstate="' + s + '"]'); if (cur) cur.classList.add("on");
+    });
+  });
+  $("demoNoTeamsD").addEventListener("change", renderTeams);
+
+  /* team cards on the event page */
+  function teamLabel(t) { return t.name || t.tag || "Uden navn"; }
+  function renderTeams() {
+    var grid = $("teamGrid"), list = $("demoNoTeamsD").checked ? [] : teams;
+    var h = list.map(function (t, i) {
+      return '<div class="card" data-team="' + i + '">' + tagPick(t.tag, 'data-ttag="' + i + '" data-v') +
+        '<div class="row"><input class="grow" data-tname="' + i + '" placeholder="' + (t.tag ? esc(t.tag) + " (holdnavn valgfrit)" : "Holdnavn") + '" value="' + esc(t.name) + '"><button class="btn sm" data-tsave="' + i + '" hidden>Gem</button></div>' +
+        '<ul class="playerlist">' + (t.players.length === 0 ? '<li class="muted">Ingen spillere endnu.</li>' : "") +
+        t.players.map(function (p, k) {
+          return '<li draggable="true" title="Træk spilleren over på et andet hold"><i class="fa-solid fa-grip-vertical drag-handle" aria-hidden="true"></i><span class="grow">' + esc(p) + '</span><button class="btn ghost sm danger" title="Fjern spiller" data-trm="' + i + "|" + k + '"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></li>';
+        }).join("") + "</ul>" +
+        '<form class="row" data-tadd="' + i + '"><input class="grow" placeholder="Spillernavn"><button class="btn sm">Tilføj</button></form>' +
+        '<div class="error-slot"></div><button class="btn ghost sm danger" data-tdel="' + i + '">Slet hold</button></div>';
+    }).join("");
+    var add = '<form class="card" id="addTeamForm"><h3 class="muted">Tilføj hold</h3><div class="presets"><span class="presets-title"><i class="fa-solid fa-tags" aria-hidden="true"></i> Foruddefinerede navne</span>' + tagPick(addTeam.tag, 'data-atag="1" data-v') + '</div>' +
+      '<input id="addTeamName" placeholder="' + (addTeam.tag ? esc(addTeam.tag) + " (holdnavn valgfrit)" : "Eller skriv et holdnavn") + '" value="' + esc(addTeam.name) + '"><button class="btn primary">Tilføj hold</button></form>';
+    grid.innerHTML = h + add;
+    // errors persisted per team
+    list.forEach(function (t, i) { if (t.err) { var s = grid.querySelector('[data-team="' + i + '"] .error-slot'); var sp = document.createElement("div"); sp.className = "error"; sp.textContent = t.err; s.replaceWith(sp); } });
+    grid.querySelectorAll("[data-ttag]").forEach(function (b) { b.addEventListener("click", function () { var t = teams[+b.dataset.ttag]; t.tag = t.tag === b.dataset.v ? "" : b.dataset.v; t.err = ""; renderTeams(); }); });
+    grid.querySelectorAll("[data-tname]").forEach(function (inp) {
+      var i = +inp.dataset.tname;
+      inp.addEventListener("input", function () { teams[i].name = inp.value; grid.querySelector('[data-tsave="' + i + '"]').hidden = false; });
+    });
+    grid.querySelectorAll("[data-tsave]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var t = teams[+b.dataset.tsave];
+        t.err = !t.name.trim() && !t.tag ? "Holdet skal have et navn eller et tag." : "";
+        if (!t.err) dsToast("Holdet er gemt", "ok");
+        renderTeams();
+      });
+    });
+    grid.querySelectorAll("[data-trm]").forEach(function (b) { b.addEventListener("click", function () { var p = b.dataset.trm.split("|"); teams[+p[0]].players.splice(+p[1], 1); renderTeams(); }); });
+    grid.querySelectorAll("[data-tadd]").forEach(function (f) {
+      f.addEventListener("submit", function (e) { e.preventDefault(); var v = f.querySelector("input").value.trim(); if (v) { teams[+f.dataset.tadd].players.push(v); renderTeams(); } });
+    });
+    grid.querySelectorAll("[data-tdel]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var i = +b.dataset.tdel; $("delTeamMsg").textContent = 'Slet holdet "' + teamLabel(teams[i]) + '"?';
+        $("delTeamOk").onclick = function () { teams.splice(i, 1); $("delTeamDlg").close(); renderTeams(); renderHelper(); };
+        $("delTeamDlg").showModal();
+      });
+    });
+    grid.querySelectorAll("[data-atag]").forEach(function (b) { b.addEventListener("click", function () { addTeam.name = $("addTeamName").value; addTeam.tag = addTeam.tag === b.dataset.v ? "" : b.dataset.v; renderTeams(); }); });
+    var f = $("addTeamForm"), nm = $("addTeamName");
+    nm.addEventListener("input", function () { addTeam.name = nm.value; dsFieldError(nm, ""); });
+    f.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!nm.value.trim() && !addTeam.tag) { dsFieldError(nm, "Vælg et tag eller skriv et holdnavn."); return; }
+      teams.push({ name: nm.value.trim(), tag: addTeam.tag, players: [], err: "" });
+      addTeam = { name: "", tag: "" }; renderTeams();
+    });
+  }
+  $("delTeamNo").addEventListener("click", function () { $("delTeamDlg").close(); });
+
+  /* ---------- time estimate ---------- */
+  var SETUP = 10, MAPMIN = { standard: 35, wingman: 12 };
+  // Sample waves (matches that can run at the same time). The app derives them from the real bracket.
+  var WAVES = {
+    single: { 4: [2, 1], 8: [4, 2, 1], 16: [8, 4, 2, 1] },
+    double: { 4: [2, 2, 1, 1], 8: [4, 4, 3, 1, 1, 1], 16: [8, 8, 6, 4, 3, 2, 1, 1] }
+  };
+  function waveMin(durs, servers) {
+    var load = []; for (var i = 0; i < Math.max(1, servers); i++) load.push(0);
+    durs.slice().sort(function (a, b) { return b - a; }).forEach(function (d) { load[load.indexOf(Math.min.apply(null, load))] += d; });
+    return Math.max.apply(null, [0].concat(load));
+  }
+  function estimate(waves, mode, servers, bo, bo3Maps) {
+    var per = SETUP + MAPMIN[mode];
+    return waves.reduce(function (s, n, wi) {
+      var d = []; for (var i = 0; i < n; i++) d.push((wi === waves.length - 1 && bo === 3 ? bo3Maps : 1) * per);
+      return s + waveMin(d, servers);
+    }, 0);
+  }
+  function dur(m) { var h = Math.floor(m / 60), mm = Math.round(m % 60); return h ? h + " t " + mm + " min" : mm + " min"; }
+  function renderTime() {
+    var waves = WAVES[$("tBracket").value][$("tTeams").value], mode = $("tMode").value, bo = +$("tFinals").value;
+    var servers = Math.max.apply(null, waves);
+    var min = estimate(waves, mode, servers, bo, 2), max = estimate(waves, mode, servers, bo, 3);
+    var st = $("tStart").value.split(":"), base = (+st[0]) * 60 + (+st[1]);
+    var clock = function (m) { m = Math.round(base + m) % 1440; return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0"); };
+    $("timeHost").innerHTML = '<div class="card stack"><div class="row wrap" style="gap:8px"><h3><i class="fa-solid fa-clock" aria-hidden="true"></i> Tidsplan</h3><div class="spacer"></div>' +
+      '<span class="badge info">Ca. ' + dur(min) + (max > min ? " - " + dur(max) : "") + "</span></div>" +
+      '<p class="muted small">' + waves.length + " omgange med " + servers + " server" + (servers === 1 ? "" : "e") + ", regnet med " + MAPMIN[mode] + " min pr. kamp og " + SETUP + " min til at komme i gang. Starter I kl. " + clock(0) + ", er I færdige ca. kl. " + clock(min) + (max > min ? "-" + clock(max) : "") + ".</p></div>";
+  }
+  ["tTeams", "tBracket", "tMode", "tFinals", "tStart"].forEach(function (id) { $(id).addEventListener("input", renderTime); });
+
+  /* ---------- start ---------- */
+  renderList();
+  go("list");
+})();
+</script>
+</body>
+</html>
