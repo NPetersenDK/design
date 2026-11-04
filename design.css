@@ -15,14 +15,16 @@
   --info: #4c8dff;
   --nav: #d4dae2;
   --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* Theme colours (default matches netdc). */
-  --accent: #4c8dff;
+  /* Theme colours (default matches blue). */
+  --accent: #2f6fed;
   --link: #4c8dff;
   --accent-soft: color-mix(in srgb, var(--accent) 20%, transparent);
   color-scheme: dark;
 }
 /* Theme drafts: set with <html data-theme="..."> */
-[data-theme="netdc"] { --accent: #4c8dff; --link: #4c8dff; }
+[data-theme="blue"] { --accent: #2f6fed; --link: #4c8dff; }
+/* gray: accent is rgb(60, 75, 100); --link is lighter so links stay readable on --bg. */
+[data-theme="gray"] { --accent: #3c4b64; --link: #93a7c7; }
 /* Separate --link: the red is too dark for text on --bg. */
 [data-theme="esb"] { --accent: #e30613; --link: #ff6b72; }
 
@@ -201,6 +203,24 @@ a.btn.ghost.danger { color: var(--danger); }
 .table tr.clickable { cursor: pointer; }
 .table tr.clickable:hover td { background: var(--panel-2); }
 .table td.num, .table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Sortable headers: th.sort with aria-sort and an <i class="fa-solid fa-sort">.
+   Active column: fa-arrow-up / fa-arrow-down. Not a Tab stop on purpose. */
+.table th.sort { cursor: pointer; user-select: none; white-space: nowrap; }
+.table th.sort:hover { color: var(--text); }
+.table th.sort i { margin-left: 6px; font-size: 11px; opacity: .35; }
+.table th.sort[aria-sort="ascending"] i,
+.table th.sort[aria-sort="descending"] i { opacity: 1; color: var(--text); }
+
+/* Clickable rows have two modes, chosen per table:
+   1. Expand: add <td class="chev"> first in the row, toggle .open on the row,
+      and put a <tr class="rowdetail"> with the details directly after it.
+   2. Modal: no chevron; the click opens a <dialog class="modal">. */
+.table td.chev { width: 28px; color: var(--muted); }
+.table td.chev i { font-size: 11px; transition: transform .15s ease; }
+.table tr.clickable.open td { background: var(--panel-2); }
+.table tr.clickable.open td.chev i { transform: rotate(90deg); color: var(--text); }
+.table tr.rowdetail td { background: rgba(255, 255, 255, 0.02); }
+.rowdetail-grid { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 12.5px; padding: 2px 0 4px; }
 
 /* ---------- Chips ---------- */
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -241,18 +261,22 @@ a.btn.ghost.danger { color: var(--danger); }
 dialog.modal { color: var(--text); margin: auto; width: calc(100% - 32px); }
 dialog.modal:not([open]) { display: none; }
 dialog.modal::backdrop { background: rgba(0, 0, 0, 0.6); }
+/* Error popup (dsError): left-aligned text. */
+dialog.modal.err { text-align: left; max-width: 480px; }
+dialog.modal.err h2 { color: var(--err); }
+dialog.modal.err form { display: flex; justify-content: flex-end; }
 
 /* ---------- Dropdown ---------- */
 .dropdown { position: relative; }
 .user-profile-button {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 85%, #fff) 0%, var(--accent) 100%);
+  background: var(--accent);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 20px;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
   white-space: nowrap;
 }
+/* Flat accent, like .btn.primary. */
 .user-profile-button:hover {
-  background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 75%, #000) 100%);
+  background: color-mix(in srgb, var(--accent) 85%, #000);
 }
 .dropdown-menu {
   position: absolute; right: 0; top: calc(100% + 8px); z-index: 50;
@@ -273,16 +297,15 @@ dialog.modal::backdrop { background: rgba(0, 0, 0, 0.6); }
 .dropdown-item:hover { background: var(--accent-soft); text-decoration: none; }
 .dropdown-divider { border: none; border-top: 1px solid var(--border); margin: 4px 0; width: auto; }
 
-/* Accent gradient login button. */
+/* Flat accent login button. */
 .login-button {
-  background: linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 78%, #000) 100%);
+  background: var(--accent);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
   text-decoration: none;
 }
 .login-button:hover {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 78%, #000) 0%, color-mix(in srgb, var(--accent) 60%, #000) 100%);
+  background: color-mix(in srgb, var(--accent) 85%, #000);
   text-decoration: none;
 }
 

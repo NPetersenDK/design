@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="netdc">
+<html lang="en" data-theme="blue">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -27,12 +27,13 @@
     <strong>Design gallery</strong> <span class="muted small">design v1.0.0</span>
     <span class="spacer"></span>
     <span class="muted small">Theme</span>
-    <button class="btn sm" data-theme-set="netdc">netdc</button>
+    <button class="btn sm" data-theme-set="blue">blue</button>
+    <button class="btn sm" data-theme-set="gray">gray</button>
     <button class="btn sm" data-theme-set="esb">esb</button>
   </div>
   <div class="row wrap g-colors" style="margin-top:8px">
     <span class="muted small">Try colours live:</span>
-    <label>--accent <input type="color" id="pick-accent" value="#4c8dff"></label>
+    <label>--accent <input type="color" id="pick-accent" value="#2f6fed"></label>
     <label>--link <input type="color" id="pick-link" value="#4c8dff"></label>
     <code class="mono small" id="color-out"></code>
     <button class="btn sm ghost" id="color-reset">Reset to theme</button>
@@ -154,6 +155,15 @@
     <div class="alert err">err: something failed</div>
     <div class="alert info">info: for your information</div>
   </div>
+  <div class="g-sub">Errors: popup (dsError) and inline (dsFieldError)</div>
+  <div class="row wrap" style="margin-bottom:16px">
+    <button class="btn sm" id="err-popup">dsError popup</button>
+    <input id="err-input" placeholder="Type something, leave empty and press Save">
+    <button class="btn sm" id="err-save">Save</button>
+    <button class="btn sm" id="err-clear">Clear</button>
+  </div>
+  <p class="muted small">Inline errors use the plain <code>.error</code> class, so they also work as static markup: <span class="error">Name is required</span></p>
+
   <div class="g-sub">Toasts (static, and live via dsToast)</div>
   <div class="g-toast-col">
     <div class="toast info">info toast</div><div class="toast ok">ok toast</div>
@@ -187,6 +197,23 @@
       </tbody>
     </table>
   </div>
+  <div class="g-sub">Sortable headers and expanding rows (static; live version in mockups/tables.html)</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr>
+        <th style="width:28px"></th>
+        <th class="sort" aria-sort="ascending">Name<i class="fa-solid fa-arrow-up" aria-hidden="true"></i></th>
+        <th class="sort" aria-sort="none">Game<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+        <th class="sort num" aria-sort="none">CPU<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+      </tr></thead>
+      <tbody>
+        <tr class="clickable open"><td class="chev"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></td><td>Open row</td><td>Counter-Strike 2</td><td class="num mono">0.8</td></tr>
+        <tr class="rowdetail"><td></td><td colspan="3"><div class="rowdetail-grid muted"><span>Node: <b class="mono">worker-2</b></span><span>Owner: <b>Kasper</b></span></div></td></tr>
+        <tr class="clickable"><td class="chev"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></td><td>Closed row</td><td>Minecraft</td><td class="num mono">1.2</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="muted small">Row click has two modes per table: expand (chevron + <code>.rowdetail</code>) or open a <code>dialog.modal</code> (no chevron). In plain-HTML apps, <code>dsRowClick(tbody, handler)</code> wires the click and ignores clicks on links and buttons.</p>
   <div class="g-sub">Tabs</div>
   <div class="tabs" id="g-tabs">
     <button class="tab on">Overview</button><button class="tab">Settings</button><button class="tab">Logs</button>
@@ -283,6 +310,15 @@
 <script src="design.js"></script>
 <script>
 (function () {
+  document.getElementById("err-popup").addEventListener("click", function () { dsError("The server did not answer. Try again in a minute.", "Could not save"); });
+  document.getElementById("err-save").addEventListener("click", function () {
+    var i = document.getElementById("err-input");
+    dsFieldError(i, i.value ? "" : "This field is required");
+    dsFieldError(document.getElementById("err-save"), i.value ? "" : "Not saved", "after");
+  });
+  document.getElementById("err-clear").addEventListener("click", function () {
+    dsFieldError(document.getElementById("err-input"), ""); dsFieldError(document.getElementById("err-save"), "");
+  });
   var root = document.documentElement;
   var pa = document.getElementById("pick-accent"), pl = document.getElementById("pick-link"), out = document.getElementById("color-out");
   function hex(v) {
@@ -303,7 +339,7 @@
     syncPickers();
   }
   var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
-  setTheme(saved === "esb" ? "esb" : "netdc");
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "blue");
   document.querySelectorAll("[data-theme-set]").forEach(function (b) {
     b.addEventListener("click", function () { setTheme(b.getAttribute("data-theme-set")); });
   });

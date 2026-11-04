@@ -7,7 +7,7 @@ One plain stylesheet (`design.css`), one tiny script (`design.js`) and one HTML 
 Set on the root element. Dark only.
 
 ```html
-<html lang="en" data-theme="esb">   <!-- or "netdc" -->
+<html lang="en" data-theme="esb">   <!-- or "blue" or "gray" -->
 ```
 
 ## Install
@@ -39,4 +39,4 @@ Toasts need `design.js` (`dsToast(message, kind)`, kind is `ok`, `warn`, `err` o
 
 `<span class="badge ok">` and the variants: `ok` (live, success), `warn` (attention), `err` (failed), `info` (neutral highlight), `muted` (idle or done). Plain `.badge` is a neutral outline.
 
-Old Bootstrap-era names map as: green to ok, yellow to warn, red to err, blue to info, gray to muted, accent to info.
+Old badge names (intranet, ct-logs) map as: green to ok, yellow to warn, red to err, blue to info, gray to muted, accent to info.

@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en" data-theme="blue">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tables: today's variants</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../design.css">
+<style>
+  /* mockup-only layout */
+  .m-wrap { max-width: 1100px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 40px; }
+  .m-bar { position: sticky; top: 0; z-index: 300; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; }
+  .m-src { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 4px; }
+  .m-note { margin: 0; }
+  section.m > h2 { border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 12px; }
+</style>
+<style>
+  /* app-only: copied as-is from today's apps, so the variants can be compared.
+     Whatever we pick moves to design.css; the rest is deleted. */
+
+  /* intranet: styles.css:252 */
+  .table th.sortable { cursor: pointer; user-select: none; }
+  .table th.sortable:hover { color: var(--text); }
+
+  /* cs-demo: app.css:14 */
+  .th-btn { background: none; border: none; color: inherit; font: inherit; text-transform: inherit; cursor: pointer; padding: 0; display: inline-flex; gap: 4px; align-items: center; }
+  .th-btn:hover { color: var(--text); }
+
+  /* gaas: styles.css:132 */
+  .btn.expand { padding: 2px 8px; font-size: 11px; }
+  .rowdetail td { background: rgba(255, 255, 255, 0.02); }
+  .rowdetail-grid { display: flex; flex-wrap: wrap; gap: 6px 24px; font-size: 12.5px; padding: 2px 0 4px; }
+</style>
+</head>
+<body>
+
+<div class="m-bar">
+  <div class="row wrap">
+    <strong>Tables: today's variants</strong> <span class="muted small">design v1.0.0, mockup</span>
+    <span class="spacer"></span>
+    <span class="muted small">Theme</span>
+    <button class="btn sm" data-theme-set="blue">blue</button>
+    <button class="btn sm" data-theme-set="gray">gray</button>
+    <button class="btn sm" data-theme-set="esb">esb</button>
+  </div>
+</div>
+
+<div class="m-wrap">
+
+  <!-- ============ A. ct-logs ============ -->
+  <section class="m">
+    <h2>A. ct-logs: clickable rows, two-line cell, "Load more"</h2>
+    <p class="m-src">Source: ct-logs Certificates.tsx</p>
+    <p class="muted m-note small" style="margin-bottom:10px">Whole row is clickable and opens a detail modal. First column has a status badge and a dimmed second line. Numeric column is right-aligned. Wrapped in <code>.table-wrap</code> for horizontal scroll.</p>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Issued</th><th>Names</th><th>Issuer</th><th>Expires</th><th>Seen as</th><th class="num">Logs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="clickable">
+            <td class="nowrap"><span class="badge info">new</span> 3 Nov 2026, 14:02<div class="muted small">2 hours ago</div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">esb.dk</code><code class="mono">www.esb.dk</code></div></td>
+            <td>Let's Encrypt R12</td>
+            <td class="nowrap">1 Feb 2027 <span class="badge ok">89 days</span></td>
+            <td>Final</td>
+            <td class="num">4</td>
+          </tr>
+          <tr class="clickable">
+            <td class="nowrap"><span class="badge warn">updated</span> 2 Nov 2026, 09:40<div class="muted small">1 day ago</div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">intranet.esb.dk</code></div></td>
+            <td>Let's Encrypt R12</td>
+            <td class="nowrap">31 Jan 2027 <span class="badge ok">88 days</span></td>
+            <td>Pre + final</td>
+            <td class="num">6</td>
+          </tr>
+          <tr class="clickable">
+            <td class="nowrap">12 Oct 2026, 22:15<div class="muted small">3 weeks ago</div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">gaas.esb.dk</code></div></td>
+            <td>Let's Encrypt R11</td>
+            <td class="nowrap">10 Jan 2027 <span class="badge warn">67 days</span></td>
+            <td>Final</td>
+            <td class="num">3</td>
+          </tr>
+          <tr class="clickable">
+            <td class="nowrap">1 Jul 2026, 08:00<div class="muted small">4 months ago</div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">old.netdc.dk</code></div></td>
+            <td>Let's Encrypt R10</td>
+            <td class="nowrap">29 Sep 2026 <span class="badge err">expired</span></td>
+            <td>Final</td>
+            <td class="num">2</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px"><button class="btn">Load more</button></div>
+  </section>
+
+  <!-- ============ B. intranet ============ -->
+  <section class="m">
+    <h2>B. intranet: sortable headers with text arrows</h2>
+    <p class="m-src">Source: intranet-frontend DiscordUsers.tsx, <code>th.sortable</code></p>
+    <p class="muted m-note small" style="margin-bottom:10px">Whole header cell is clickable. Direction is a text arrow (▲ / ▼) appended to the label. No <code>aria-sort</code>. Click a header to try it.</p>
+    <div class="table-wrap">
+      <table class="table" id="tbl-b">
+        <thead>
+          <tr>
+            <th class="sortable" data-key="name">Brugernavn</th>
+            <th class="sortable" data-key="role">Rolle</th>
+            <th class="sortable" data-key="joined">Medlem siden</th>
+            <th class="sortable num" data-key="games">Kampe</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ C. cs-demo ============ -->
+  <section class="m">
+    <h2>C. cs-demo: sortable headers with button and icon</h2>
+    <p class="m-src">Source: cs-demo-fetch-workspace SortableTh.tsx, <code>.th-btn</code></p>
+    <p class="muted m-note small" style="margin-bottom:10px">A real button inside the header, so it is reachable with Tab and Enter. Font Awesome arrow on the active column, plus <code>aria-sort</code>. Same data as B.</p>
+    <div class="table-wrap">
+      <table class="table" id="tbl-c">
+        <thead>
+          <tr>
+            <th data-key="name"><button type="button" class="th-btn">Brugernavn</button></th>
+            <th data-key="role"><button type="button" class="th-btn">Rolle</button></th>
+            <th data-key="joined"><button type="button" class="th-btn">Medlem siden</button></th>
+            <th class="num" data-key="games"><button type="button" class="th-btn">Kampe</button></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ D. gaas ============ -->
+  <section class="m">
+    <h2>D. gaas: expandable rows</h2>
+    <p class="m-src">Source: gaas-frontend Servers.tsx, <code>.btn.expand</code> and <code>.rowdetail</code></p>
+    <p class="muted m-note small" style="margin-bottom:10px">Small ghost button in the first column (▸ / ▾, with <code>aria-expanded</code>) opens an extra row with details underneath. Name is a link, status is a badge, last column has a "Manage" button. Click ▸ to try it.</p>
+    <div class="table-wrap">
+      <table class="table" id="tbl-d">
+        <thead>
+          <tr>
+            <th></th><th>Name</th><th>Game</th><th>Status</th><th>Address</th><th>CPU</th><th>Memory</th><th>Created</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><button type="button" class="btn ghost sm expand" aria-label="Details for Pracc 1" aria-expanded="false" aria-controls="d-1"><span aria-hidden="true">▸</span></button></td>
+            <td><a href="#">Pracc 1</a></td>
+            <td>Counter-Strike 2</td>
+            <td><span class="badge ok">Running</span> <span class="badge ok" style="margin-left:6px">7 online</span></td>
+            <td class="mono">91.107.12.4:27015</td>
+            <td class="mono">0.8 cores</td>
+            <td class="mono">2.1 GiB</td>
+            <td class="muted">12 Oct 2026</td>
+            <td><a class="btn ghost sm" href="#">Manage</a></td>
+          </tr>
+          <tr class="rowdetail" id="d-1" hidden>
+            <td></td>
+            <td colspan="8"><div class="rowdetail-grid muted">
+              <span>Node: <b class="mono">worker-2</b></span>
+              <span>Owner: <b>Kasper</b></span>
+              <span>Auto-update: <b>on</b></span>
+            </div></td>
+          </tr>
+          <tr>
+            <td><button type="button" class="btn ghost sm expand" aria-label="Details for Minecraft" aria-expanded="false" aria-controls="d-2"><span aria-hidden="true">▸</span></button></td>
+            <td><a href="#">Minecraft</a></td>
+            <td>Minecraft</td>
+            <td><span class="badge warn">Starting</span></td>
+            <td class="mono">91.107.12.5:25565</td>
+            <td class="mono">1.2 cores</td>
+            <td class="mono">3.4 GiB</td>
+            <td class="muted">30 Oct 2026</td>
+            <td><a class="btn ghost sm" href="#">Manage</a></td>
+          </tr>
+          <tr class="rowdetail" id="d-2" hidden>
+            <td></td>
+            <td colspan="8"><div class="rowdetail-grid muted">
+              <span>Node: <b class="mono">worker-1</b></span>
+              <span>Owner: <b>Trænere</b> (group)</span>
+              <span>Auto-update: <b>off</b></span>
+            </div></td>
+          </tr>
+          <tr>
+            <td><button type="button" class="btn ghost sm expand" aria-label="Details for Test" aria-expanded="false" aria-controls="d-3"><span aria-hidden="true">▸</span></button></td>
+            <td><a href="#">Test</a></td>
+            <td>Valheim</td>
+            <td><span class="badge muted">Stopped</span></td>
+            <td class="mono muted">-</td>
+            <td class="mono muted">-</td>
+            <td class="mono muted">-</td>
+            <td class="muted">1 Sep 2026</td>
+            <td><a class="btn ghost sm" href="#">Manage</a></td>
+          </tr>
+          <tr class="rowdetail" id="d-3" hidden>
+            <td></td>
+            <td colspan="8"><div class="rowdetail-grid muted">
+              <span>Node: <b class="mono">-</b></span>
+              <span>Owner: <b>Nikolaj</b></span>
+              <span>Auto-update: <b>off</b></span>
+            </div></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ F. hybrid ============ -->
+  <section class="m">
+    <h2>F. Standard table, mode 1: row expands</h2>
+    <p class="m-src">Now in design.css: <code>th.sort</code>, <code>tr.clickable</code>, <code>td.chev</code>, <code>.open</code>, <code>.rowdetail</code></p>
+    <p class="muted m-note small" style="margin-bottom:10px">
+      A: the whole row is clickable. D: clicking a row opens its detail row, and the row stays highlighted while open.
+      B: headers and rows are not Tab stops, so Tab only visits real links and buttons (Name, Manage).
+      C: Font Awesome arrows and <code>aria-sort</code>. Inactive columns show a faint <i class="fa-solid fa-sort"></i> so you can see they sort, and the column does not change width when the active one moves.
+      The small chevron in the first column only shows state; it is not a button. Clicking the Name link or Manage does not toggle the row.
+    </p>
+    <div class="table-wrap">
+      <table class="table" id="tbl-f">
+        <thead>
+          <tr>
+            <th style="width:28px"></th>
+            <th class="sort" data-key="name">Name<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort" data-key="game">Game<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort" data-key="status">Status<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th>Address</th>
+            <th class="sort num" data-key="cpu">CPU<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort" data-key="created">Created<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ G. standard, modal mode ============ -->
+  <section class="m">
+    <h2>G. Standard table, mode 2: row opens a modal</h2>
+    <p class="m-src">Same table and header as F, as in ct-logs</p>
+    <p class="muted m-note small" style="margin-bottom:10px">Same <code>th.sort</code> headers and <code>tr.clickable</code> rows. The only difference is that there is no chevron column and the click opens a <code>&lt;dialog class="modal wide"&gt;</code> instead of a detail row. Use this when the details are long, as with a certificate.</p>
+    <div class="table-wrap">
+      <table class="table" id="tbl-g">
+        <thead>
+          <tr>
+            <th class="sort" data-key="name">Name<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort" data-key="game">Game<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort" data-key="status">Status<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th>Address</th>
+            <th class="sort num" data-key="cpu">CPU<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort" data-key="created">Created<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <dialog class="modal wide" id="g-dialog">
+      <h2></h2>
+      <div class="stack g-body" style="gap:8px"></div>
+      <form method="dialog" style="display:flex;justify-content:flex-end"><button class="btn primary">Close</button></form>
+    </dialog>
+  </section>
+
+  <!-- ============ E. empty / loading ============ -->
+  <section class="m">
+    <h2>E. Empty and loading states</h2>
+    <p class="m-src">Sources: ct-logs (card), intranet Servers.tsx (table row), ct-logs Logs.tsx</p>
+    <p class="muted m-note small" style="margin-bottom:10px">Three different solutions to the same case, as the apps do today.</p>
+
+    <p class="m-src" style="margin-top:16px">ct-logs: no table, a card with muted text</p>
+    <div class="card"><p class="muted">No certificates yet. A newly watched domain stays empty until its next certificate is issued.</p></div>
+
+    <p class="m-src" style="margin-top:16px">intranet: one row spanning all columns</p>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Navn</th><th>Spil</th><th>Status</th></tr></thead>
+        <tbody><tr><td colspan="3" class="muted">Ingen servere endnu.</td></tr></tbody>
+      </table>
+    </div>
+
+    <p class="m-src" style="margin-top:16px">Loading: muted text where the table would be</p>
+    <div class="muted">Loading…</div>
+  </section>
+
+</div>
+
+<script src="../design.js"></script>
+<script>
+(function () {
+  var root = document.documentElement;
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "blue");
+  document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  /* sample data for the two sort demos */
+  var rows = [
+    { name: "Kasper", role: "Træner", joined: "2022-03-14", games: 142 },
+    { name: "Mille", role: "Medlem", joined: "2023-09-01", games: 38 },
+    { name: "Nikolaj", role: "Admin", joined: "2020-01-20", games: 311 },
+    { name: "Sofie", role: "Medlem", joined: "2024-02-11", games: 12 },
+    { name: "Anders", role: "Træner", joined: "2021-06-30", games: 205 }
+  ];
+
+  function sortRows(key, dir) {
+    return rows.slice().sort(function (a, b) {
+      var x = a[key], y = b[key];
+      var r = typeof x === "number" ? x - y : String(x).localeCompare(String(y));
+      return dir === "asc" ? r : -r;
+    });
+  }
+  function bodyHtml(list) {
+    return list.map(function (r) {
+      return "<tr><td>" + r.name + "</td><td><span class=\"badge " + (r.role === "Admin" ? "info" : r.role === "Træner" ? "warn" : "muted") + "\">" + r.role + "</span></td><td class=\"muted\">" + r.joined + "</td><td class=\"num\">" + r.games + "</td></tr>";
+    }).join("");
+  }
+
+  /* B: intranet, text arrow */
+  var b = document.getElementById("tbl-b"), bs = { key: "name", dir: "asc" };
+  var bLabels = {};
+  b.querySelectorAll("th.sortable").forEach(function (th) { bLabels[th.dataset.key] = th.textContent; });
+  function renderB() {
+    b.querySelector("tbody").innerHTML = bodyHtml(sortRows(bs.key, bs.dir));
+    b.querySelectorAll("th.sortable").forEach(function (th) {
+      th.textContent = bLabels[th.dataset.key] + (th.dataset.key === bs.key ? (bs.dir === "asc" ? " ▲" : " ▼") : "");
+    });
+  }
+  b.querySelectorAll("th.sortable").forEach(function (th) {
+    th.addEventListener("click", function () {
+      bs = { key: th.dataset.key, dir: bs.key === th.dataset.key && bs.dir === "asc" ? "desc" : "asc" };
+      renderB();
+    });
+  });
+  renderB();
+
+  /* C: cs-demo, button + icon + aria-sort */
+  var c = document.getElementById("tbl-c"), cs = { key: "name", dir: "asc" };
+  var cLabels = {};
+  c.querySelectorAll("th").forEach(function (th) { cLabels[th.dataset.key] = th.querySelector("button").textContent; });
+  function renderC() {
+    c.querySelector("tbody").innerHTML = bodyHtml(sortRows(cs.key, cs.dir));
+    c.querySelectorAll("th").forEach(function (th) {
+      var active = th.dataset.key === cs.key;
+      th.setAttribute("aria-sort", active ? (cs.dir === "asc" ? "ascending" : "descending") : "none");
+      th.querySelector("button").innerHTML = cLabels[th.dataset.key] + (active ? " <i class=\"fa-solid fa-arrow-" + (cs.dir === "asc" ? "up" : "down") + "\" aria-hidden=\"true\"></i>" : "");
+    });
+  }
+  c.querySelectorAll("th button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var k = btn.parentNode.dataset.key;
+      cs = { key: k, dir: cs.key === k && cs.dir === "asc" ? "desc" : "asc" };
+      renderC();
+      c.querySelector("th[data-key=\"" + k + "\"] button").focus();
+    });
+  });
+  renderC();
+
+  /* D: gaas, expand rows */
+  document.querySelectorAll("#tbl-d .expand").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var open = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!open));
+      btn.firstChild.textContent = open ? "▸" : "▾";
+      document.getElementById(btn.getAttribute("aria-controls")).hidden = open;
+    });
+  });
+
+  /* F: hybrid */
+  var servers = [
+    { name: "Pracc 1", game: "Counter-Strike 2", status: "Running", cls: "ok", addr: "91.107.12.4:27015", cpu: 0.8, created: "2026-10-12", node: "worker-2", owner: "Kasper", auto: "on", online: 7 },
+    { name: "Minecraft", game: "Minecraft", status: "Starting", cls: "warn", addr: "91.107.12.5:25565", cpu: 1.2, created: "2026-10-30", node: "worker-1", owner: "Trænere (group)", auto: "off", online: 0 },
+    { name: "Test", game: "Valheim", status: "Stopped", cls: "muted", addr: "", cpu: null, created: "2026-09-01", node: "-", owner: "Nikolaj", auto: "off", online: 0 },
+    { name: "Scrim", game: "Counter-Strike 2", status: "Running", cls: "ok", addr: "91.107.12.6:27015", cpu: 0.5, created: "2026-11-02", node: "worker-2", owner: "Mille", auto: "on", online: 3 }
+  ];
+  var f = document.getElementById("tbl-f"), fs = { key: "name", dir: "asc" }, fopen = {};
+  function fSorted() {
+    return servers.slice().sort(function (a, b) {
+      var x = a[fs.key], y = b[fs.key];
+      if (x === null) x = -1; if (y === null) y = -1;
+      var r = typeof x === "number" ? x - y : String(x).localeCompare(String(y));
+      return fs.dir === "asc" ? r : -r;
+    });
+  }
+  function renderF() {
+    var html = "";
+    fSorted().forEach(function (s) {
+      var open = !!fopen[s.name];
+      html += '<tr class="clickable' + (open ? " open" : "") + '" data-name="' + s.name + '" aria-expanded="' + open + '">' +
+        '<td class="chev"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></td>' +
+        '<td><a href="#">' + s.name + '</a></td>' +
+        '<td>' + s.game + '</td>' +
+        '<td><span class="badge ' + s.cls + '">' + s.status + '</span>' + (s.online ? ' <span class="badge ok" style="margin-left:6px">' + s.online + ' online</span>' : '') + '</td>' +
+        '<td class="mono">' + (s.addr || '<span class="muted">-</span>') + '</td>' +
+        '<td class="num mono">' + (s.cpu === null ? '<span class="muted">-</span>' : s.cpu + ' cores') + '</td>' +
+        '<td class="muted">' + s.created + '</td>' +
+        '<td><a class="btn ghost sm" href="#">Manage</a></td></tr>';
+      if (open) {
+        html += '<tr class="rowdetail"><td></td><td colspan="7"><div class="rowdetail-grid muted">' +
+          '<span>Node: <b class="mono">' + s.node + '</b></span>' +
+          '<span>Owner: <b>' + s.owner + '</b></span>' +
+          '<span>Auto-update: <b>' + s.auto + '</b></span></div></td></tr>';
+      }
+    });
+    f.querySelector("tbody").innerHTML = html;
+    f.querySelectorAll("th.sort").forEach(function (th) {
+      var active = th.dataset.key === fs.key;
+      th.setAttribute("aria-sort", active ? (fs.dir === "asc" ? "ascending" : "descending") : "none");
+      th.querySelector("i").className = "fa-solid " + (active ? (fs.dir === "asc" ? "fa-arrow-up" : "fa-arrow-down") : "fa-sort");
+    });
+  }
+  f.querySelector("thead").addEventListener("click", function (e) {
+    var th = e.target.closest("th.sort");
+    if (!th) return;
+    fs = { key: th.dataset.key, dir: fs.key === th.dataset.key && fs.dir === "asc" ? "desc" : "asc" };
+    renderF();
+  });
+  dsRowClick(f.querySelector("tbody"), function (tr) {
+    fopen[tr.dataset.name] = !fopen[tr.dataset.name];
+    renderF();
+  });
+  renderF();
+
+  /* G: same table, mode 2: row opens a modal */
+  var g = document.getElementById("tbl-g"), gs = { key: "name", dir: "asc" };
+  function renderG() {
+    var list = servers.slice().sort(function (a, b) {
+      var x = a[gs.key], y = b[gs.key];
+      if (x === null) x = -1; if (y === null) y = -1;
+      var r = typeof x === "number" ? x - y : String(x).localeCompare(String(y));
+      return gs.dir === "asc" ? r : -r;
+    });
+    g.querySelector("tbody").innerHTML = list.map(function (s) {
+      return '<tr class="clickable" data-name="' + s.name + '">' +
+        '<td><a href="#">' + s.name + '</a></td>' +
+        '<td>' + s.game + '</td>' +
+        '<td><span class="badge ' + s.cls + '">' + s.status + '</span></td>' +
+        '<td class="mono">' + (s.addr || '<span class="muted">-</span>') + '</td>' +
+        '<td class="num mono">' + (s.cpu === null ? '<span class="muted">-</span>' : s.cpu + ' cores') + '</td>' +
+        '<td class="muted">' + s.created + '</td></tr>';
+    }).join("");
+    g.querySelectorAll("th.sort").forEach(function (th) {
+      var active = th.dataset.key === gs.key;
+      th.setAttribute("aria-sort", active ? (gs.dir === "asc" ? "ascending" : "descending") : "none");
+      th.querySelector("i").className = "fa-solid " + (active ? (gs.dir === "asc" ? "fa-arrow-up" : "fa-arrow-down") : "fa-sort");
+    });
+  }
+  g.querySelector("thead").addEventListener("click", function (e) {
+    var th = e.target.closest("th.sort");
+    if (!th) return;
+    gs = { key: th.dataset.key, dir: gs.key === th.dataset.key && gs.dir === "asc" ? "desc" : "asc" };
+    renderG();
+  });
+  var gd = document.getElementById("g-dialog");
+  dsRowClick(g.querySelector("tbody"), function (tr) {
+    var s = servers.filter(function (x) { return x.name === tr.dataset.name; })[0];
+    gd.querySelector("h2").textContent = s.name;
+    gd.querySelector(".g-body").innerHTML =
+      [["Game", s.game], ["Status", s.status], ["Address", s.addr || "-"], ["Node", s.node], ["Owner", s.owner], ["Auto-update", s.auto], ["Created", s.created]]
+        .map(function (p) { return '<div class="row"><span class="muted" style="min-width:110px">' + p[0] + '</span><b>' + p[1] + '</b></div>'; }).join("");
+    gd.showModal();
+  });
+  renderG();
+})();
+</script>
+</body>
+</html>
