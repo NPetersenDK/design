@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en" data-theme="netdc">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design gallery</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="design.css">
+<style>
+  /* gallery-only */
+  .g-wrap { max-width: 1100px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 36px; }
+  .g-bar { position: sticky; top: 0; z-index: 300; background: var(--panel); border-bottom: 1px solid var(--border); padding: 10px 20px; }
+  section.g > h2 { border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 16px; }
+  .g-sub { margin: 18px 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+  .g-frame { position: relative; transform: translate(0); height: 300px; overflow: hidden; border: 1px dashed var(--border); border-radius: 8px; }
+  .g-page { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .g-page .app { min-height: 0; }
+  .g-page .content { overflow-x: auto; }
+  .g-colors label { flex-direction: row; align-items: center; }
+  .g-toast-col { display: flex; flex-direction: column; gap: 8px; max-width: 360px; }
+</style>
+</head>
+<body>
+
+<div class="g-bar">
+  <div class="row wrap">
+    <strong>Design gallery</strong> <span class="muted small">design v1.0.0</span>
+    <span class="spacer"></span>
+    <span class="muted small">Theme</span>
+    <button class="btn sm" data-theme-set="netdc">netdc</button>
+    <button class="btn sm" data-theme-set="esb">esb</button>
+  </div>
+  <div class="row wrap g-colors" style="margin-top:8px">
+    <span class="muted small">Try colours live:</span>
+    <label>--accent <input type="color" id="pick-accent" value="#4c8dff"></label>
+    <label>--link <input type="color" id="pick-link" value="#4c8dff"></label>
+    <code class="mono small" id="color-out"></code>
+    <button class="btn sm ghost" id="color-reset">Reset to theme</button>
+  </div>
+</div>
+
+<div class="g-wrap">
+
+<section class="g" id="tokens">
+  <h2>Tokens and typography</h2>
+  <div class="row wrap">
+    <span class="badge muted">--bg</span><span class="badge muted">--panel</span><span class="badge muted">--panel-2</span>
+    <span class="badge muted">--border</span><span class="badge ok">--ok</span><span class="badge warn">--warn</span>
+    <span class="badge err">--err</span><span class="badge info">--info</span>
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3>
+    <p>Body text with a <a href="#tokens">link</a>, <span class="muted">muted text</span>, <span class="small">small text</span> and <span class="mono">mono text</span>.</p>
+    <p class="center-text">center-text</p>
+    <p class="right">right</p>
+    <span class="nowrap">nowrap text stays on one line</span>
+    <span class="sr-only">sr-only text (hidden)</span>
+    <span class="hidden">hidden (not shown)</span>
+  </div>
+  <div class="g-sub">Layout helpers: row, row.wrap, grow, spacer, grid2, center</div>
+  <div class="row"><span class="badge muted">row</span><span class="grow muted">grow</span><span class="spacer"></span><span class="badge muted">after spacer</span></div>
+  <div class="row wrap" style="margin-top:8px"><label>Name <input value="row.wrap"></label><button class="btn">Aligned button</button></div>
+  <div class="grid2" style="margin-top:8px"><div class="card">grid2 a</div><div class="card">grid2 b</div></div>
+  <div class="g-frame" style="height:120px;margin-top:8px"><div class="center" style="min-height:100%">.center</div></div>
+</section>
+
+<section class="g" id="buttons">
+  <h2>Buttons</h2>
+  <div class="row wrap">
+    <button class="btn">Default</button>
+    <button class="btn primary">Primary</button>
+    <button class="btn danger">Danger</button>
+    <button class="btn ghost">Ghost</button>
+    <button class="btn ghost danger">Ghost danger</button>
+    <button class="btn sm">Small</button>
+    <button class="btn" disabled>Disabled</button>
+    <a class="btn" href="#buttons">a.btn</a>
+    <a class="btn primary" href="#buttons">a.btn primary</a>
+  </div>
+  <div class="g-sub">Block</div>
+  <div class="stack" style="max-width:360px">
+    <a class="btn block" href="#buttons"><i class="fa-brands fa-discord"></i> Log in with Discord</a>
+    <button class="btn block primary"><i class="fa-solid fa-right-to-bracket"></i> Block primary</button>
+  </div>
+  <div class="g-sub">Choice</div>
+  <div class="row wrap">
+    <button class="btn choice"><strong>Option one</strong><span class="choice-hint">Hint line for option one</span></button>
+    <button class="btn choice"><strong>Option two</strong><span class="choice-hint">Hint line for option two</span></button>
+  </div>
+  <div class="g-sub">Login and profile buttons</div>
+  <div class="row wrap">
+    <a class="btn login-button" href="#buttons">Log in</a>
+    <button class="btn user-profile-button">Hej Nikolaj</button>
+  </div>
+  <div class="g-sub">Focus (tab to these)</div>
+  <div class="row wrap"><button class="btn">Tab here</button><a href="#buttons">link</a><input placeholder="input"></div>
+</section>
+
+<section class="g" id="forms">
+  <h2>Forms</h2>
+  <div class="card" style="max-width:520px">
+    <label>Text <input placeholder="Placeholder"></label>
+    <label>Select <select><option>One</option><option>Two</option></select></label>
+    <label>Textarea <textarea rows="2">Some text</textarea></label>
+    <label>Range <input type="range" min="0" max="100" value="40"></label>
+    <label class="checkbox"><input type="checkbox" checked> Checkbox (label.checkbox)</label>
+    <label class="checkbox"><input type="radio" name="r" checked> Radio</label>
+    <label class="switch"><input type="checkbox" checked> Switch on</label>
+    <label class="switch"><input type="checkbox"> Switch off</label>
+    <label>Disabled <input value="disabled" disabled></label>
+    <details class="advanced"><summary>Advanced</summary><div class="stack"><label>Hidden field <input></label></div></details>
+  </div>
+  <div class="g-sub">Login card and divider</div>
+  <div class="card login">
+    <h2>Sign in</h2>
+    <button class="btn block primary">Continue</button>
+    <div class="divider">or</div>
+    <a class="btn block" href="#forms">Other method</a>
+  </div>
+</section>
+
+<section class="g" id="cards">
+  <h2>Cards and stats</h2>
+  <div class="grid2">
+    <div class="card"><h3>Card title</h3><p class="muted">Description under the heading.</p><p>Card body paragraph.</p></div>
+    <div class="card"><h3>Another card</h3><p>With a button.</p><div class="row"><button class="btn primary">Save</button><button class="btn ghost">Cancel</button></div></div>
+  </div>
+  <div class="g-sub">statrow, stat</div>
+  <div class="row wrap statrow">
+    <div class="stat"><div class="stat-value">128</div><div class="stat-label">Members</div></div>
+    <div class="stat"><div class="stat-value">7</div><div class="stat-label">Live</div></div>
+    <div class="stat"><div class="stat-value">99.9%</div><div class="stat-label">Uptime</div></div>
+  </div>
+  <div class="g-sub">stat sm</div>
+  <div class="row wrap statrow">
+    <div class="stat sm"><div class="stat-value">42</div><div class="stat-label">Clients</div></div>
+    <div class="stat sm"><div class="stat-value">-12 dB</div><div class="stat-label">Level</div></div>
+  </div>
+</section>
+
+<section class="g" id="status">
+  <h2>Status: text, badges, alerts</h2>
+  <div class="row wrap"><span class="error">error text</span><span class="warn">warn text</span><span class="success">success text</span></div>
+  <div class="g-sub">Badges</div>
+  <div class="row wrap">
+    <span class="badge">badge</span><span class="badge ok">ok</span><span class="badge warn">warn</span>
+    <span class="badge err">err</span><span class="badge info">info</span><span class="badge muted">muted</span>
+  </div>
+  <div class="g-sub">Alerts</div>
+  <div class="stack" style="gap:8px">
+    <div class="alert">Plain alert</div>
+    <div class="alert ok">ok: saved successfully</div>
+    <div class="alert warn">warn: check this first</div>
+    <div class="alert err">err: something failed</div>
+    <div class="alert info">info: for your information</div>
+  </div>
+  <div class="g-sub">Toasts (static, and live via dsToast)</div>
+  <div class="g-toast-col">
+    <div class="toast info">info toast</div><div class="toast ok">ok toast</div>
+    <div class="toast warn">warn toast</div><div class="toast err">err toast</div>
+  </div>
+  <div class="row wrap" style="margin-top:10px">
+    <button class="btn sm" data-toast="info">dsToast info</button>
+    <button class="btn sm" data-toast="ok">dsToast ok</button>
+    <button class="btn sm" data-toast="warn">dsToast warn</button>
+    <button class="btn sm" data-toast="err">dsToast err</button>
+  </div>
+  <div class="g-sub">Log</div>
+  <div class="log">
+    <div class="log-entry">12:00:01 plain entry</div>
+    <div class="log-entry ok">12:00:02 connected</div>
+    <div class="log-entry warn">12:00:03 slow response</div>
+    <div class="log-entry err">12:00:04 request failed</div>
+    <div class="log-entry debug">12:00:05 debug detail</div>
+  </div>
+</section>
+
+<section class="g" id="tables">
+  <h2>Tables, tabs, chips</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Name</th><th>Status</th><th class="num">Score</th><th class="right">Right</th></tr></thead>
+      <tbody>
+        <tr class="clickable"><td>Alpha (clickable)</td><td><span class="badge ok">ok</span></td><td class="num">1,204</td><td class="right nowrap">a</td></tr>
+        <tr class="clickable"><td>Bravo</td><td><span class="badge warn">warn</span></td><td class="num">88</td><td class="right">b</td></tr>
+        <tr><td>Charlie (static)</td><td><span class="badge err">err</span></td><td class="num">7</td><td class="right">c</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="g-sub">Tabs</div>
+  <div class="tabs" id="g-tabs">
+    <button class="tab on">Overview</button><button class="tab">Settings</button><button class="tab">Logs</button>
+  </div>
+  <div class="g-sub">Chips</div>
+  <div class="chips"><button class="chip">Default</button><button class="chip on">Selected (on)</button><button class="chip"><i class="fa-solid fa-user"></i> With icon</button></div>
+</section>
+
+<section class="g" id="overlays">
+  <h2>Modals and dropdown</h2>
+  <div class="g-sub">modal-overlay + modal (static preview)</div>
+  <div class="g-frame">
+    <div class="modal-overlay" style="position:absolute">
+      <div class="modal"><h2>Welcome</h2><p class="muted">Centered modal for short messages.</p><button class="btn primary">OK</button></div>
+    </div>
+  </div>
+  <div class="g-sub">modal wide (static preview)</div>
+  <div class="g-frame">
+    <div class="modal-overlay" style="position:absolute">
+      <div class="modal wide"><h2>Confirm</h2><p>Text-heavy, left-aligned dialog.</p>
+        <div class="row"><span class="spacer"></span><button class="btn ghost">Cancel</button><button class="btn danger">Delete</button></div></div>
+    </div>
+  </div>
+  <div class="g-sub">dialog.modal (live)</div>
+  <button class="btn" id="open-dialog">Open dialog</button>
+  <dialog class="modal" id="g-dialog">
+    <h2>Native dialog</h2>
+    <p class="muted">dialog.modal with ::backdrop. Closed state is hidden.</p>
+    <form method="dialog" class="row"><span class="spacer"></span><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">OK</button></form>
+  </dialog>
+  <div class="g-sub">Dropdown</div>
+  <div style="min-height:230px;display:flex;justify-content:flex-end">
+    <div class="dropdown">
+      <button class="btn user-profile-button" id="dd-btn"><i class="fa-solid fa-user"></i> Hej Nikolaj</button>
+      <div class="dropdown-menu" id="dd-menu">
+        <div class="dropdown-header">Account</div>
+        <button class="dropdown-item"><i class="fa-solid fa-gear"></i> Settings</button>
+        <a class="dropdown-item" href="#overlays"><i class="fa-solid fa-id-badge"></i> Profile</a>
+        <hr class="dropdown-divider">
+        <button class="dropdown-item"><i class="fa-solid fa-right-from-bracket"></i> Log out</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="g" id="sample">
+  <h2>Sample page</h2>
+  <div class="g-page">
+    <div class="app">
+      <div class="topbar">
+        <span class="brand"><i class="fa-solid fa-cube"></i> Brand</span>
+        <nav class="nav">
+          <a class="active" href="#sample">Dashboard</a>
+          <a href="#sample">Members</a>
+          <button class="nav-dropdown-toggle">Games <i class="fa-solid fa-caret-down"></i></button>
+        </nav>
+        <span class="spacer"></span>
+        <a class="btn login-button" href="#sample">Log in</a>
+      </div>
+      <div class="content stack">
+        <div class="row wrap statrow">
+          <div class="stat"><div class="stat-value">128</div><div class="stat-label">Members</div></div>
+          <div class="stat"><div class="stat-value">7</div><div class="stat-label">Live</div></div>
+        </div>
+        <div class="grid2">
+          <div class="card">
+            <h3>Recent matches</h3>
+            <p class="muted">Click a row for details.</p>
+            <div class="table-wrap"><table class="table">
+              <thead><tr><th>Team</th><th>Status</th><th class="num">Score</th></tr></thead>
+              <tbody>
+                <tr class="clickable"><td>Red vs Blue</td><td><span class="badge ok">live</span></td><td class="num">13 - 9</td></tr>
+                <tr class="clickable"><td>Green vs Gold</td><td><span class="badge muted">done</span></td><td class="num">16 - 4</td></tr>
+              </tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <h3>Create event</h3>
+            <label>Title <input placeholder="Event title"></label>
+            <label>Type <select><option>LAN</option><option>Online</option></select></label>
+            <label class="switch"><input type="checkbox" checked> Public</label>
+            <div class="row"><button class="btn primary">Create</button><button class="btn ghost">Cancel</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="footer muted">Footer text</div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="toast-area"></div>
+<script src="design.js"></script>
+<script>
+(function () {
+  var root = document.documentElement;
+  var pa = document.getElementById("pick-accent"), pl = document.getElementById("pick-link"), out = document.getElementById("color-out");
+  function hex(v) {
+    v = (v || "").trim();
+    if (/^#[0-9a-f]{3}$/i.test(v)) v = "#" + v[1]+v[1]+v[2]+v[2]+v[3]+v[3];
+    return v.toLowerCase();
+  }
+  function showOut() { out.textContent = "--accent: " + pa.value + "; --link: " + pl.value + ";"; }
+  function syncPickers() {
+    var cs = getComputedStyle(root);
+    pa.value = hex(cs.getPropertyValue("--accent")); pl.value = hex(cs.getPropertyValue("--link"));
+    showOut();
+  }
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    root.style.removeProperty("--accent"); root.style.removeProperty("--link");
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+    syncPickers();
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(saved === "esb" ? "esb" : "netdc");
+  document.querySelectorAll("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.getAttribute("data-theme-set")); });
+  });
+  pa.addEventListener("input", function () { root.style.setProperty("--accent", pa.value); showOut(); });
+  pl.addEventListener("input", function () { root.style.setProperty("--link", pl.value); showOut(); });
+  document.getElementById("color-reset").addEventListener("click", function () { setTheme(root.getAttribute("data-theme")); });
+
+  document.querySelectorAll("[data-toast]").forEach(function (b) {
+    b.addEventListener("click", function () { dsToast("This is a " + b.dataset.toast + " toast", b.dataset.toast); });
+  });
+  var dlg = document.getElementById("g-dialog");
+  document.getElementById("open-dialog").addEventListener("click", function () { dlg.showModal(); });
+  document.getElementById("dd-btn").addEventListener("click", function () {
+    document.getElementById("dd-menu").classList.toggle("hidden");
+  });
+  document.querySelectorAll("#g-tabs .tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll("#g-tabs .tab").forEach(function (x) { x.classList.remove("on"); });
+      t.classList.add("on");
+    });
+  });
+  document.querySelectorAll(".chips .chip").forEach(function (c) {
+    c.addEventListener("click", function () { c.classList.toggle("on"); });
+  });
+})();
+</script>
+</body>
+</html>
