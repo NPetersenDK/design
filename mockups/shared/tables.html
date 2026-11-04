@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tables: today's variants</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-<link rel="stylesheet" href="../design.css">
+<link rel="stylesheet" href="../../design.css">
 <style>
   /* mockup-only layout */
   .m-wrap { max-width: 1100px; margin: 0 auto; padding: 20px; display: flex; flex-direction: column; gap: 40px; }
@@ -62,7 +62,7 @@
         <tbody>
           <tr class="clickable">
             <td class="nowrap"><span class="badge info">new</span> 3 Nov 2026, 14:02<div class="muted small">2 hours ago</div></td>
-            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">esb.dk</code><code class="mono">www.esb.dk</code></div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">example.com</code><code class="mono">www.example.com</code></div></td>
             <td>Let's Encrypt R12</td>
             <td class="nowrap">1 Feb 2027 <span class="badge ok">89 days</span></td>
             <td>Final</td>
@@ -70,7 +70,7 @@
           </tr>
           <tr class="clickable">
             <td class="nowrap"><span class="badge warn">updated</span> 2 Nov 2026, 09:40<div class="muted small">1 day ago</div></td>
-            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">intranet.esb.dk</code></div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">portal.example.com</code></div></td>
             <td>Let's Encrypt R12</td>
             <td class="nowrap">31 Jan 2027 <span class="badge ok">88 days</span></td>
             <td>Pre + final</td>
@@ -78,7 +78,7 @@
           </tr>
           <tr class="clickable">
             <td class="nowrap">12 Oct 2026, 22:15<div class="muted small">3 weeks ago</div></td>
-            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">gaas.esb.dk</code></div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">games.example.com</code></div></td>
             <td>Let's Encrypt R11</td>
             <td class="nowrap">10 Jan 2027 <span class="badge warn">67 days</span></td>
             <td>Final</td>
@@ -86,7 +86,7 @@
           </tr>
           <tr class="clickable">
             <td class="nowrap">1 Jul 2026, 08:00<div class="muted small">4 months ago</div></td>
-            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">old.netdc.dk</code></div></td>
+            <td><div style="display:flex;flex-wrap:wrap;gap:4px"><code class="mono">old.example.org</code></div></td>
             <td>Let's Encrypt R10</td>
             <td class="nowrap">29 Sep 2026 <span class="badge err">expired</span></td>
             <td>Final</td>
@@ -156,7 +156,7 @@
             <td><a href="#">Pracc 1</a></td>
             <td>Counter-Strike 2</td>
             <td><span class="badge ok">Running</span> <span class="badge ok" style="margin-left:6px">7 online</span></td>
-            <td class="mono">91.107.12.4:27015</td>
+            <td class="mono">192.0.2.4:27015</td>
             <td class="mono">0.8 cores</td>
             <td class="mono">2.1 GiB</td>
             <td class="muted">12 Oct 2026</td>
@@ -166,7 +166,7 @@
             <td></td>
             <td colspan="8"><div class="rowdetail-grid muted">
               <span>Node: <b class="mono">worker-2</b></span>
-              <span>Owner: <b>Kasper</b></span>
+              <span>Owner: <b>Sam</b></span>
               <span>Auto-update: <b>on</b></span>
             </div></td>
           </tr>
@@ -175,7 +175,7 @@
             <td><a href="#">Minecraft</a></td>
             <td>Minecraft</td>
             <td><span class="badge warn">Starting</span></td>
-            <td class="mono">91.107.12.5:25565</td>
+            <td class="mono">192.0.2.5:25565</td>
             <td class="mono">1.2 cores</td>
             <td class="mono">3.4 GiB</td>
             <td class="muted">30 Oct 2026</td>
@@ -204,7 +204,7 @@
             <td></td>
             <td colspan="8"><div class="rowdetail-grid muted">
               <span>Node: <b class="mono">-</b></span>
-              <span>Owner: <b>Nikolaj</b></span>
+              <span>Owner: <b>Alex</b></span>
               <span>Auto-update: <b>off</b></span>
             </div></td>
           </tr>
@@ -292,7 +292,7 @@
 
 </div>
 
-<script src="../design.js"></script>
+<script src="../../design.js"></script>
 <script>
 (function () {
   var root = document.documentElement;
@@ -308,11 +308,11 @@
 
   /* sample data for the two sort demos */
   var rows = [
-    { name: "Kasper", role: "Træner", joined: "2022-03-14", games: 142 },
-    { name: "Mille", role: "Medlem", joined: "2023-09-01", games: 38 },
-    { name: "Nikolaj", role: "Admin", joined: "2020-01-20", games: 311 },
-    { name: "Sofie", role: "Medlem", joined: "2024-02-11", games: 12 },
-    { name: "Anders", role: "Træner", joined: "2021-06-30", games: 205 }
+    { name: "Sam", role: "Træner", joined: "2022-03-14", games: 142 },
+    { name: "Robin", role: "Medlem", joined: "2023-09-01", games: 38 },
+    { name: "Alex", role: "Admin", joined: "2020-01-20", games: 311 },
+    { name: "Jamie", role: "Medlem", joined: "2024-02-11", games: 12 },
+    { name: "Casey", role: "Træner", joined: "2021-06-30", games: 205 }
   ];
 
   function sortRows(key, dir) {
@@ -380,10 +380,10 @@
 
   /* F: hybrid */
   var servers = [
-    { name: "Pracc 1", game: "Counter-Strike 2", status: "Running", cls: "ok", addr: "91.107.12.4:27015", cpu: 0.8, created: "2026-10-12", node: "worker-2", owner: "Kasper", auto: "on", online: 7 },
-    { name: "Minecraft", game: "Minecraft", status: "Starting", cls: "warn", addr: "91.107.12.5:25565", cpu: 1.2, created: "2026-10-30", node: "worker-1", owner: "Trænere (group)", auto: "off", online: 0 },
-    { name: "Test", game: "Valheim", status: "Stopped", cls: "muted", addr: "", cpu: null, created: "2026-09-01", node: "-", owner: "Nikolaj", auto: "off", online: 0 },
-    { name: "Scrim", game: "Counter-Strike 2", status: "Running", cls: "ok", addr: "91.107.12.6:27015", cpu: 0.5, created: "2026-11-02", node: "worker-2", owner: "Mille", auto: "on", online: 3 }
+    { name: "Pracc 1", game: "Counter-Strike 2", status: "Running", cls: "ok", addr: "192.0.2.4:27015", cpu: 0.8, created: "2026-10-12", node: "worker-2", owner: "Sam", auto: "on", online: 7 },
+    { name: "Minecraft", game: "Minecraft", status: "Starting", cls: "warn", addr: "192.0.2.5:25565", cpu: 1.2, created: "2026-10-30", node: "worker-1", owner: "Trænere (group)", auto: "off", online: 0 },
+    { name: "Test", game: "Valheim", status: "Stopped", cls: "muted", addr: "", cpu: null, created: "2026-09-01", node: "-", owner: "Alex", auto: "off", online: 0 },
+    { name: "Scrim", game: "Counter-Strike 2", status: "Running", cls: "ok", addr: "192.0.2.6:27015", cpu: 0.5, created: "2026-11-02", node: "worker-2", owner: "Robin", auto: "on", online: 3 }
   ];
   var f = document.getElementById("tbl-f"), fs = { key: "name", dir: "asc" }, fopen = {};
   function fSorted() {

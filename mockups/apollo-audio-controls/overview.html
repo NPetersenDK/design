@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Apollo Audio Controls: mockup</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
-<link rel="stylesheet" href="../design.css">
+<link rel="stylesheet" href="../../design.css">
 <style>
   /* app-only */
   .gain-readout { font-size: 42px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -54,7 +54,7 @@
     <span class="badge muted" id="inputPill"><i class="fa-solid fa-plug"></i> <span id="inputText">input unknown</span></span>
     <span class="row" style="gap:6px">
       <i class="fa-solid fa-network-wired muted" title="IP address of the Apollo e1x"></i>
-      <input id="deviceInput" class="device-field" placeholder="192.168.1.50" autocomplete="off" spellcheck="false" aria-label="Apollo e1x IP address" value="192.168.1.50">
+      <input id="deviceInput" class="device-field" placeholder="192.0.2.50" autocomplete="off" spellcheck="false" aria-label="Apollo e1x IP address" value="192.0.2.50">
     </span>
     <button id="connectBtn" class="btn sm primary"><i class="fa-solid fa-link"></i> Connect</button>
     <button id="refreshBtn" class="btn sm" title="Read the switches again" disabled><i class="fa-solid fa-rotate"></i> Refresh</button>
@@ -119,8 +119,8 @@
       </div>
 
       <div class="log" id="log">
-        <div class="log-entry debug">[14:31:58] connecting to 192.168.1.50</div>
-        <div class="log-entry">[14:31:58] connected to 192.168.1.50</div>
+        <div class="log-entry debug">[14:31:58] connecting to 192.0.2.50</div>
+        <div class="log-entry">[14:31:58] connected to 192.0.2.50</div>
         <div class="log-entry debug">[14:31:59] flags 0x0a cap=0x1f</div>
         <div class="log-entry">[14:32:07] gain set to 42 dB</div>
         <div class="log-entry warn">[14:32:15] MUTE set by the device (48V change)</div>
@@ -150,7 +150,7 @@
   </div>
 </main>
 
-<footer class="footer">A project by NPetersen - <a href="https://github.com/NPetersenDK"><i class="fa-brands fa-github"></i> NPetersenDK</a> - <a href="https://nipetersen.dk">nipetersen.dk</a></footer>
+<footer class="footer">A project by Example Author - <a href="#"><i class="fa-brands fa-github"></i> example-author</a> - <a href="#">example.com</a></footer>
 
 </div>
 
@@ -164,7 +164,7 @@
   </form>
 </dialog>
 
-<script src="../design.js"></script>
+<script src="../../design.js"></script>
 <script>
 (function () {
   var root = document.documentElement;
@@ -240,7 +240,7 @@
     err: "Set gain: device did not confirm",
     warn: "Connect: Enter the IP address of the e1x first",
     ok: "Refresh: switches read",
-    info: "Connected to 192.168.1.50"
+    info: "Connected to 192.0.2.50"
   };
   document.querySelectorAll("[data-toast]").forEach(function (b) {
     b.addEventListener("click", function () { dsToast(msgs[b.dataset.toast], b.dataset.toast); });
