@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="da" data-theme="esb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example Club: tickets (mockup)</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+<link rel="stylesheet" href="../../design.css">
+<style>
+  /* app-only */
+
+  /* Demo bar (not part of the app) */
+  .m-bar { background: var(--panel-2); border-bottom: 1px dashed var(--border-strong); padding: 8px 20px; }
+  .m-bar .m-group { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .m-bar .btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Orders table inside a fold-out row */
+  .orders-wrap { padding: 4px 0 8px; }
+  .table tr.rowdetail > td { padding-left: 16px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="m-bar">
+  <div class="row wrap small">
+    <strong>Mockup</strong>
+    <span class="muted">Tema</span>
+    <span class="m-group">
+      <button class="btn sm" data-theme-set="blue">blue</button>
+      <button class="btn sm" data-theme-set="gray">gray</button>
+      <button class="btn sm" data-theme-set="esb">esb</button>
+    </span>
+    <span class="muted">Visning</span>
+    <span class="m-group" id="viewBtns">
+      <button class="btn sm" data-view="list">1. Liste over events</button>
+      <button class="btn sm" data-view="lan">2. Event: LAN (3 billettyper)</button>
+      <button class="btn sm" data-view="oldboys">2. Event: Oldboys (gratis middagsbillet)</button>
+      <button class="btn sm" data-view="legacy">3. Tidligere event (legacy)</button>
+    </span>
+  </div>
+</div>
+
+<header class="topbar">
+  <a href="#" class="brand"><i class="fa-solid fa-gamepad" aria-hidden="true"></i> Example Club</a>
+  <nav class="nav">
+    <a href="#">Home</a>
+    <a href="#">Events</a>
+    <div class="dropdown">
+      <button class="nav-dropdown-toggle" data-dd="ddMore">Andet <i class="fa-solid fa-caret-down" aria-hidden="true"></i></button>
+      <div class="dropdown-menu" id="ddMore" hidden>
+        <a class="dropdown-item" href="#">Item one</a>
+        <a class="dropdown-item" href="#">Billetter</a>
+      </div>
+    </div>
+  </nav>
+  <div class="spacer"></div>
+  <div class="dropdown">
+    <button class="btn primary user-profile-button" data-dd="ddUser"><i class="fa-solid fa-circle-user" aria-hidden="true"></i> Hej Alex Example <i class="fa-solid fa-caret-down" aria-hidden="true"></i></button>
+    <div class="dropdown-menu" id="ddUser" hidden>
+      <a class="dropdown-item" href="#"><i class="fa-solid fa-user" aria-hidden="true"></i> Profile</a>
+      <hr class="dropdown-divider">
+      <button class="dropdown-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Log ud</button>
+    </div>
+  </div>
+</header>
+
+<main class="content">
+
+  <!-- View 1: list of events -->
+  <div class="stack" id="viewList">
+    <div class="row wrap">
+      <h2>Billetter</h2>
+      <div class="spacer"></div>
+      <span class="muted small" id="fetchedAt"></span>
+    </div>
+    <div class="chips" id="filterChips">
+      <button class="chip" type="button" data-filter="upcoming">Kommende</button>
+      <button class="chip" type="button" data-filter="past">Tidligere</button>
+      <button class="chip" type="button" data-filter="all">Alle</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table" id="listTable">
+        <thead>
+          <tr>
+            <th class="sort" data-key="title" aria-sort="none">Event<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort" data-key="start" aria-sort="none">Dato<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort num" data-key="sold" aria-sort="none">Solgt<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+            <th class="sort num" data-key="types" aria-sort="none">Billettyper<i class="fa-solid fa-sort" aria-hidden="true"></i></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="note">Solgt tæller betalte billetter (betalt, eller betalt og under behandling) på billettyper med en pris over 0 kr. Gratis billetter er ikke med i tallet.</p>
+  </div>
+
+  <!-- Views 2 and 3: one event -->
+  <div class="stack" id="viewDetail" hidden>
+    <div class="row wrap">
+      <button class="btn ghost" id="backBtn"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Tilbage til billetter</button>
+      <h2 id="evTitle"></h2>
+      <span class="badge muted" id="evLegacy" hidden>Tidligere</span>
+      <div class="spacer"></div>
+      <a href="#" id="shopLink">Se på webshop <i class="fa-solid fa-up-right-from-square" aria-hidden="true"></i></a>
+    </div>
+    <div class="muted" id="evMeta"></div>
+
+    <div class="row wrap statrow" id="evStats"></div>
+    <p class="note" id="soldNote" hidden>Solgt tæller kun billettyper med en pris over 0 kr. Gratis billetter, fx Fællesspisning, er ikke med i Solgt, Kapacitet og Tilbage.</p>
+
+    <h3>Billettyper</h3>
+    <div class="table-wrap">
+      <table class="table" id="ticketTable">
+        <thead id="ticketHead"></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="muted small">Klik på en billettype for at se ordrerne.</div>
+  </div>
+
+</main>
+
+<footer class="footer muted center-text">
+  <i>Site created with <i class="fa-regular fa-heart" aria-hidden="true"></i> by Example Club (mockup footer)</i>
+</footer>
+</div>
+
+<script src="../../design.js"></script>
+<script>
+(function () {
+  "use strict";
+  var root = document.documentElement;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  /* ---------- theme ---------- */
+  function setTheme(t) {
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem("ds-theme", t); } catch (e) {}
+  }
+  var saved = null; try { saved = localStorage.getItem("ds-theme"); } catch (e) {}
+  setTheme(["esb", "blue", "gray"].indexOf(saved) >= 0 ? saved : "esb");
+  $$("[data-theme-set]").forEach(function (b) {
+    b.addEventListener("click", function () { setTheme(b.dataset.themeSet); });
+  });
+
+  /* ---------- dropdowns ---------- */
+  $$("[data-dd]").forEach(function (b) {
+    b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var m = document.getElementById(b.dataset.dd);
+      var open = m.hidden;
+      $$(".dropdown-menu").forEach(function (x) { x.hidden = true; });
+      m.hidden = !open;
+    });
+  });
+  document.addEventListener("click", function () { $$(".dropdown-menu").forEach(function (x) { x.hidden = true; }); });
+  $("#logoutBtn").addEventListener("click", function () { dsToast("Log ud er kun en demo her.", "info"); });
+
+  /* ---------- sample data (all invented) ---------- */
+  var TODAY = "2026-11-06";
+  var FETCHED = "06.11.2026 09.16";
+
+  function O(no, date, status, count, name) {
+    return { orderId: no, date: date, status: status, tickets: count, name: name };
+  }
+  function T(sku, title, price, capacity, orders) {
+    return { sku: sku, title: title, price: price, capacity: capacity, orders: orders };
+  }
+
+  var EVENTS = [
+    {
+      ref: "5416", title: "Sample LAN Winter", start: "2026-12-28", legacy: false,
+      tickets: [
+        T("EXAMPLE-5423", "LAN, fuld pris", 350, 18, [
+          O("10412", "2026-09-30", "completed", 2, "Testperson Et"),
+          O("10419", "2026-10-02", "completed", 1, "Testperson To"),
+          O("10431", "2026-10-05", "processing", 4, "Testperson Tre"),
+          O("10440", "2026-10-09", "completed", 3, "Testperson Fire"),
+          O("10447", "2026-10-11", "pending", 2, "Testperson Fem"),
+          O("10452", "2026-10-14", "cancelled", 1, "Testperson Seks"),
+          O("10466", "2026-10-21", "completed", 3, "Testperson Syv")
+        ]),
+        T("EXAMPLE-5424", "LAN, medlemspris", 300, 2, [
+          O("10428", "2026-10-04", "completed", 1, "Testperson Otte"),
+          O("10455", "2026-10-15", "completed", 1, "Testperson Ni")
+        ]),
+        T("EXAMPLE-5425", "LAN, ungdom", 250, 6, [
+          O("10433", "2026-10-06", "completed", 1, "Testperson Ti"),
+          O("10449", "2026-10-12", "on-hold", 1, "Testperson Elleve"),
+          O("10470", "2026-10-25", "refunded", 2, "Testperson Tolv"),
+          O("10474", "2026-10-27", "processing", 1, "Testperson Tretten")
+        ])
+      ]
+    },
+    {
+      ref: "5398", title: "Sample Oldboys November", start: "2026-11-21", legacy: false,
+      tickets: [
+        T("EXAMPLE-6001", "Oldboys, deltagelse", 100, 40, [
+          O("10501", "2026-10-20", "completed", 1, "Testperson Et"),
+          O("10503", "2026-10-21", "completed", 2, "Testperson To"),
+          O("10507", "2026-10-23", "processing", 1, "Testperson Fjorten"),
+          O("10511", "2026-10-26", "failed", 1, "Testperson Femten"),
+          O("10515", "2026-10-30", "completed", 1, "Testperson Seksten")
+        ]),
+        T("EXAMPLE-6002", "Fællesspisning", 0, 40, [
+          O("10501", "2026-10-20", "completed", 1, "Testperson Et"),
+          O("10503", "2026-10-21", "completed", 2, "Testperson To"),
+          O("10507", "2026-10-23", "processing", 1, "Testperson Fjorten"),
+          O("10509", "2026-10-24", "completed", 1, "Testperson Sytten"),
+          O("10515", "2026-10-30", "completed", 1, "Testperson Seksten"),
+          O("10518", "2026-11-02", "completed", 3, "Testperson Atten")
+        ])
+      ]
+    },
+    {
+      ref: "5361", title: "Sample Oldboys Oktober", start: "2026-10-17", legacy: false,
+      tickets: [
+        T("EXAMPLE-5901", "Oldboys, deltagelse", 100, 40, [
+          O("10301", "2026-09-28", "completed", 2, "Testperson Nitten"),
+          O("10305", "2026-10-01", "completed", 1, "Testperson Tyve"),
+          O("10312", "2026-10-06", "completed", 1, "Testperson Et")
+        ])
+      ]
+    },
+    {
+      ref: "legacy-2026-09-oldboys", title: "EXAMPLE-09-2026", start: "", month: "2026-09", legacy: true,
+      tickets: [
+        T("EXAMPLE-09-2026", "EXAMPLE-09-2026", null, null, [
+          O("9980", "2026-08-30", "completed", 1, "Testperson Et"),
+          O("9984", "2026-09-01", "completed", 2, "Testperson To"),
+          O("9991", "2026-09-04", "cancelled", 1, "Testperson Tre"),
+          O("9997", "2026-09-07", "completed", 1, "Testperson Fire")
+        ])
+      ]
+    }
+  ];
+
+  /* ---------- rules: paid, sold, headline ---------- */
+  function isPaid(status) { return status === "completed" || status === "processing"; }
+  function sold(t) {
+    return t.orders.reduce(function (n, o) { return n + (isPaid(o.status) ? o.tickets : 0); }, 0);
+  }
+  // Tickets that feed the headline: price > 0; if none has a price above 0, all tickets.
+  function counted(ev) {
+    var paid = ev.tickets.filter(function (t) { return t.price > 0; });
+    return paid.length ? paid : ev.tickets;
+  }
+  function hasFree(ev) { return ev.tickets.some(function (t) { return t.price === 0; }); }
+  function headline(ev) { return counted(ev).reduce(function (n, t) { return n + sold(t); }, 0); }
+  function capacity(ev) { return counted(ev).reduce(function (n, t) { return n + (t.capacity || 0); }, 0); }
+
+  var STATUS = {
+    "completed":  { cls: "ok",   text: "Betalt" },
+    "processing": { cls: "info", text: "Betalt, behandles" },
+    "pending":    { cls: "warn", text: "Afventer betaling" },
+    "on-hold":    { cls: "warn", text: "På pause" },
+    "cancelled":  { cls: "err",  text: "Annulleret" },
+    "refunded":   { cls: "err",  text: "Refunderet" },
+    "failed":     { cls: "err",  text: "Fejlet" }
+  };
+  function statusBadge(s) {
+    var m = STATUS[s] || { cls: "muted", text: s };
+    return '<span class="badge ' + m.cls + '">' + esc(m.text) + "</span>";
+  }
+  function fmtDate(d) {
+    if (!d) return "";
+    var p = d.split("-");
+    return p[2] + "." + p[1] + "." + p[0];
+  }
+  var MONTHS = ["januar", "februar", "marts", "april", "maj", "juni", "juli", "august", "september", "oktober", "november", "december"];
+  function fmtMonth(m) {
+    var p = m.split("-");
+    return MONTHS[Number(p[1]) - 1] + " " + p[0];
+  }
+  function fmtPrice(p) { return p == null ? "-" : p + " kr."; }
+  function byRef(ref) { return EVENTS.filter(function (e) { return e.ref === ref; })[0]; }
+
+  /* ---------- state ---------- */
+  var S = { view: "list", filter: "upcoming", sortKey: "start", sortDir: "asc", ev: null, openSku: null };
+
+  function isUpcoming(ev) { return !ev.legacy && ev.start >= TODAY; }
+
+  /* ---------- view 1: list ---------- */
+  function listRows() {
+    var rows = EVENTS.filter(function (ev) {
+      if (S.filter === "upcoming") return isUpcoming(ev);
+      if (S.filter === "past") return !isUpcoming(ev);
+      return true;
+    }).map(function (ev) {
+      return { ev: ev, title: ev.legacy ? "Tidligere event (" + fmtMonth(ev.month) + ")" : ev.title,
+               start: ev.legacy ? "" : ev.start, sold: headline(ev), types: ev.tickets.length };
+    });
+    var k = S.sortKey, d = S.sortDir === "asc" ? 1 : -1;
+    rows.sort(function (a, b) {
+      var x = a[k], y = b[k];
+      // events without a date sort last in either direction
+      if (k === "start" && x !== y && (x === "" || y === "")) return x === "" ? 1 : -1;
+      if (x < y) return -d;
+      if (x > y) return d;
+      return 0;
+    });
+    return rows;
+  }
+  function renderList() {
+    $("#fetchedAt").textContent = "Hentet " + FETCHED;
+    $$("#filterChips .chip").forEach(function (c) {
+      c.classList.toggle("on", c.dataset.filter === S.filter);
+      c.setAttribute("aria-pressed", c.dataset.filter === S.filter ? "true" : "false");
+    });
+    $$("#listTable th.sort").forEach(function (th) {
+      var active = th.dataset.key === S.sortKey;
+      th.setAttribute("aria-sort", active ? (S.sortDir === "asc" ? "ascending" : "descending") : "none");
+      $("i", th).className = "fa-solid " + (active ? (S.sortDir === "asc" ? "fa-arrow-up" : "fa-arrow-down") : "fa-sort");
+    });
+    var rows = listRows();
+    var h = rows.map(function (r) {
+      var ev = r.ev;
+      return '<tr class="clickable" data-ref="' + esc(ev.ref) + '">' +
+        "<td>" + esc(r.title) + (ev.legacy ? ' <span class="badge muted">Tidligere</span>' : "") + "</td>" +
+        "<td>" + (ev.legacy ? '<span class="muted">-</span>' : esc(fmtDate(ev.start))) + "</td>" +
+        '<td class="num">' + r.sold + "</td>" +
+        '<td class="num">' + r.types + "</td></tr>";
+    }).join("");
+    if (!rows.length) h = '<tr><td colspan="4" class="muted">Ingen events at vise.</td></tr>';
+    $("#listTable tbody").innerHTML = h;
+  }
+  $$("#filterChips .chip").forEach(function (c) {
+    c.addEventListener("click", function () { S.filter = c.dataset.filter; renderList(); });
+  });
+  $$("#listTable th.sort").forEach(function (th) {
+    th.addEventListener("click", function () {
+      var k = th.dataset.key;
+      if (S.sortKey === k) S.sortDir = S.sortDir === "asc" ? "desc" : "asc";
+      else { S.sortKey = k; S.sortDir = (k === "sold" || k === "types") ? "desc" : "asc"; }
+      renderList();
+    });
+  });
+  dsRowClick($("#listTable tbody"), function (tr) { openEvent(byRef(tr.dataset.ref)); });
+
+  /* ---------- views 2 and 3: event detail ---------- */
+  function stat(value, label) {
+    return '<div class="stat"><div class="stat-value">' + value + '</div><div class="stat-label">' + esc(label) + "</div></div>";
+  }
+  function ordersTable(t) {
+    var orders = t.orders.slice().sort(function (a, b) {
+      return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.orderId < b.orderId ? -1 : 1);
+    });
+    var rows = orders.map(function (o) {
+      return "<tr><td>" + esc(o.orderId) + "</td><td>" + esc(o.name) + '</td><td class="num">' + o.tickets +
+        "</td><td>" + statusBadge(o.status) + "</td><td>" + esc(fmtDate(o.date)) + "</td></tr>";
+    }).join("");
+    if (!rows) rows = '<tr><td colspan="5" class="muted">Ingen ordrer endnu.</td></tr>';
+    return '<div class="orders-wrap table-wrap"><table class="table"><thead><tr>' +
+      "<th>Ordre</th><th>Navn</th><th class=\"num\">Antal</th><th>Status</th><th>Dato</th>" +
+      "</tr></thead><tbody>" + rows + "</tbody></table></div>";
+  }
+  function renderDetail() {
+    var ev = S.ev, legacy = ev.legacy;
+    $("#evTitle").textContent = legacy ? "Tidligere event" : ev.title;
+    $("#evLegacy").hidden = !legacy;
+    $("#evMeta").textContent = legacy
+      ? "Event fra " + fmtMonth(ev.month) + " uden dato i webshoppen. Kun salgstal og ordrer vises."
+      : "Dato: " + fmtDate(ev.start) + (isUpcoming(ev) ? "" : " (afholdt)");
+
+    var total = headline(ev);
+    if (legacy) {
+      $("#evStats").innerHTML = stat(total, "Solgt");
+    } else {
+      var cap = capacity(ev);
+      $("#evStats").innerHTML = stat(total, "Solgt") + stat(cap, "Kapacitet") + stat(Math.max(0, cap - total), "Tilbage");
+    }
+    $("#soldNote").hidden = !hasFree(ev);
+
+    $("#ticketHead").innerHTML = "<tr><th class=\"chev\"></th><th>SKU</th><th>Billet</th>" +
+      '<th class="num">Pris</th><th class="num">' + (legacy ? "Solgt" : "Solgt / Kapacitet") + "</th></tr>";
+    var cols = 5, h = "";
+    ev.tickets.forEach(function (t) {
+      var open = S.openSku === t.sku, s = sold(t);
+      h += '<tr class="clickable' + (open ? " open" : "") + '" data-sku="' + esc(t.sku) + '" aria-expanded="' + open + '">' +
+        '<td class="chev"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></td>' +
+        "<td>" + esc(t.sku) + "</td>" +
+        "<td>" + esc(t.title) + (t.price === 0 && !legacy ? ' <span class="badge muted">Ikke med i Solgt</span>' : "") + "</td>" +
+        '<td class="num">' + esc(fmtPrice(t.price)) + "</td>" +
+        '<td class="num">' + s + (legacy ? "" : " / " + t.capacity) + "</td></tr>";
+      if (open) h += '<tr class="rowdetail"><td></td><td colspan="' + (cols - 1) + '">' + ordersTable(t) + "</td></tr>";
+    });
+    $("#ticketTable tbody").innerHTML = h;
+  }
+  dsRowClick($("#ticketTable tbody"), function (tr) {
+    S.openSku = S.openSku === tr.dataset.sku ? null : tr.dataset.sku;
+    renderDetail();
+  });
+
+  /* ---------- view switching ---------- */
+  function openEvent(ev) {
+    S.ev = ev; S.openSku = null;
+    S.view = ev.legacy ? "legacy" : (ev.ref === "5416" ? "lan" : "oldboys");
+    show();
+  }
+  function show() {
+    var list = S.view === "list";
+    $("#viewList").hidden = !list;
+    $("#viewDetail").hidden = list;
+    $$("#viewBtns .btn").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.view === S.view ? "true" : "false"); });
+    if (list) renderList(); else renderDetail();
+  }
+  $$("#viewBtns .btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var v = b.dataset.view;
+      if (v === "list") { S.view = "list"; show(); return; }
+      openEvent(byRef(v === "lan" ? "5416" : v === "oldboys" ? "5398" : "legacy-2026-09-oldboys"));
+    });
+  });
+  $("#backBtn").addEventListener("click", function () { S.view = "list"; show(); });
+  $("#shopLink").addEventListener("click", function (e) { e.preventDefault(); dsToast("Webshoppen åbnes i en ny fane.", "info"); });
+
+  show();
+})();
+</script>
+</body>
+</html>
