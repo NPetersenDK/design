@@ -24,7 +24,7 @@
 
 <div class="g-bar">
   <div class="row wrap">
-    <strong>Design gallery</strong> <span class="muted small">design v1.4.1</span>
+    <strong>Design gallery</strong> <span class="muted small">design v1.5.0</span>
     <span class="spacer"></span>
     <span class="muted small">Theme</span>
     <button class="btn sm" data-theme-set="blue">blue</button>
@@ -48,6 +48,8 @@
     <span class="badge muted">--bg</span><span class="badge muted">--panel</span><span class="badge muted">--panel-2</span>
     <span class="badge muted">--border</span><span class="badge ok">--ok</span><span class="badge warn">--warn</span>
     <span class="badge err">--err</span><span class="badge info">--info</span>
+    <span class="badge" style="color:var(--team-a);border-color:var(--team-a)">--team-a</span>
+    <span class="badge" style="color:var(--team-b);border-color:var(--team-b)">--team-b</span>
   </div>
   <div class="stack" style="margin-top:16px">
     <h1>Heading 1</h1><h2>Heading 2</h2><h3>Heading 3</h3>
@@ -104,6 +106,7 @@
   <div class="card" style="max-width:520px">
     <label>Text <input placeholder="Placeholder"></label>
     <label>Select <select><option>One</option><option>Two</option></select></label>
+    <label>Select with groups <select><optgroup label="Official"><option>de_mirage</option><option>de_train</option></optgroup><optgroup label="Workshop"><option>Aim Botz</option></optgroup></select></label>
     <label>Textarea <textarea rows="2">Some text</textarea></label>
     <label>Range <input type="range" min="0" max="100" value="40"></label>
     <label class="checkbox"><input type="checkbox" checked> Checkbox (label.checkbox)</label>
@@ -113,7 +116,7 @@
     <label>Disabled <input value="disabled" disabled></label>
     <details class="advanced"><summary>Advanced</summary><div class="stack"><label>Hidden field <input></label></div></details>
   </div>
-  <div class="g-sub">Login card and divider</div>
+  <div class="g-sub">Login card and divider (centred by itself; wrap it in .center on a page of its own)</div>
   <div class="card login">
     <h2>Sign in</h2>
     <button class="btn block primary">Continue</button>
@@ -158,6 +161,7 @@
   <div class="row wrap">
     <span class="badge">badge</span><span class="badge ok">ok</span><span class="badge warn">warn</span>
     <span class="badge err">err</span><span class="badge info">info</span><span class="badge accent">accent (tag)</span><span class="badge muted">muted</span>
+    <a class="badge" href="#status">a.badge (link)</a>
   </div>
   <div class="g-sub">Alerts</div>
   <div class="stack" style="gap:8px">
@@ -236,6 +240,11 @@
       <span class="badge muted">v1.2.0</span>
     </div>
     <p class="note">A note under a toolbar or a button row. Normal gap, small muted text.</p>
+    <div class="toolbar"><span class="muted small">Official maps</span><span class="badge">de_mirage</span><span class="badge">de_train</span></div>
+    <div class="toolbar"><span class="muted small">Workshop maps</span><a class="badge" href="#tables">Aim Botz</a></div>
+    <p class="note">A label and its badges on one line: a toolbar with a muted label first. Use it instead of a heading above a row, which gets the full stack gap.</p>
+    <div class="g-sub">ul.list</div>
+    <ul class="list"><li>First item</li><li>Second item</li><li>Third item</li></ul>
     <pre class="log">[14:31:58] a log on a pre keeps its spacing
 [14:32:15] sits on --inset with a neutral edge</pre>
     <div class="row">

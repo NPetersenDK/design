@@ -23,7 +23,7 @@ Copy `design.css` into the app and link it before the app's own CSS. Do not edit
 Install from a tag (after the repo is published):
 
 ```
-curl -o <install path> https://raw.githubusercontent.com/NPetersenDK/design/v1.4.1/design.css
+curl -o <install path> https://raw.githubusercontent.com/NPetersenDK/design/v1.5.0/design.css
 ```
 
 Toasts need `design.js` (`dsToast(message, kind)`, kind is `ok`, `warn`, `err` or `info`). Copy it the same way.
@@ -40,3 +40,13 @@ Toasts need `design.js` (`dsToast(message, kind)`, kind is `ok`, `warn`, `err` o
 `<span class="badge ok">` and the variants: `ok` (live, success), `warn` (attention), `err` (failed), `info` (neutral highlight), `accent` (tags: groups, games, sources, in the theme colour), `muted` (idle or done). Plain `.badge` is a neutral outline.
 
 Old badge names (intranet, ct-logs) map as: green to ok, yellow to warn, red to err, blue to info, gray to muted, accent to accent.
+
+A badge that links somewhere is `<a class="badge">`. Its edge lights up on hover.
+
+## Small helpers
+
+- `ul.list`: a plain list, no bullets or indent.
+- `dl.kv` and `.kv`: key and value, as a two column list or as one row.
+- A label with badges on one line: `<div class="toolbar"><span class="muted small">Label</span>...badges</div>`. A heading above a row gets the full `.stack` gap.
+- `--team-a` and `--team-b`: the two sides of a match.
+- `.login` centres itself. On a page of its own, wrap it in `.center`.
