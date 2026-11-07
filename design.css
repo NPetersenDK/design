@@ -1,4 +1,4 @@
-/* design v1.4.0 */
+/* design v1.4.1 */
 
 /* ---------- Tokens ---------- */
 :root {
@@ -153,6 +153,14 @@ td.row > * + * { margin-left: 8px; }
 .stat.sm { padding: 8px 12px; min-width: 90px; }
 .stat.sm .stat-value { font-size: 18px; }
 .stat.sm .stat-label { font-size: 11px; }
+
+/* Key and value. .kv is one row: key left, value right. dl.kv is a two column list
+   of keys and values. */
+.kv { display: flex; justify-content: space-between; gap: 12px; }
+.kv span { color: var(--muted); }
+dl.kv { display: grid; grid-template-columns: max-content 1fr; justify-content: start; gap: 6px 16px; margin: 0; }
+dl.kv dt { color: var(--muted); }
+dl.kv dd { margin: 0; overflow-wrap: anywhere; }
 
 /* ---------- Forms ---------- */
 label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
