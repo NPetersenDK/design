@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="da" data-theme="blue">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spinner | Design mockup</title>
+  <link rel="stylesheet" href="../design.css">
+  <style>
+    body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: 0; }
+    .topbar { justify-content: space-between; }
+    .layout { display: grid; grid-template-columns: 390px minmax(0, 1fr); min-height: 100vh; }
+    aside { padding: 24px; background: var(--panel); border-right: 1px solid var(--border); }
+    h1 { font-size: 24px; }
+    h2 { font-size: 15px; }
+    section { padding: 20px 0; border-top: 1px solid var(--border); margin-top: 20px; }
+    .entry { display: grid; grid-template-columns: minmax(0, 1fr) 80px; gap: 8px; margin-top: 8px; }
+    input { width: 100%; min-width: 0; }
+    .preview { display: grid; align-content: center; justify-items: center; padding: 24px; gap: 24px; }
+    .wheel { width: min(100%, 560px); aspect-ratio: 1; position: relative; border: 6px solid white; border-radius: 50%; background: conic-gradient(#d6303e 0deg 90deg, white 90deg 180deg, #d6303e 180deg 270deg, white 270deg); }
+    .wheel::before { content: ''; position: absolute; left: 47%; top: -12px; width: 6%; height: 8%; background: var(--accent); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+    .wheel::after { content: 'NP'; position: absolute; inset: 40%; display: grid; place-items: center; border: 4px solid white; border-radius: 50%; background: var(--panel); font-weight: 700; }
+    .result { font-size: 22px; font-weight: 600; }
+    .winner { position: absolute; z-index: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100%; height: 20%; display: grid; place-items: center; padding: 6px; text-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: 0; clip-path: ellipse(50% 250% at 50% 50%); }
+    .winner span { font-size: 20px; font-weight: 400; line-height: 1.2; overflow-wrap: anywhere; }
+    @media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } .preview { grid-row: 1; } aside { border-right: 0; } }
+  </style>
+</head>
+<body>
+  <main class="layout">
+    <aside>
+      <details class="advanced"><summary>Åbn tidligere opsætning</summary><form class="stack"><label>Base64 eller hjullink<textarea rows="3"></textarea></label><button class="btn" type="button">Åbn opsætning</button></form></details>
+      <section><h2>Felter</h2><div class="entry"><label>Navn<input value="En gave"></label><label>Chance %<input type="number" value="50"></label></div><div class="entry"><input aria-label="Navn på felt 2" value="Prøv igen"><input aria-label="Chance for felt 2" type="number" value="50"></div><div class="row wrap" style="margin-top:12px"><button class="btn sm" type="button">+ Tilføj felt</button><button class="btn sm" type="button">Fordel lige</button><span class="badge ok">100 %</span></div></section>
+      <section class="stack"><h2>Farver</h2><div class="row wrap"><label class="checkbox"><input type="radio" name="palette" checked>Rød / hvid</label><label class="checkbox"><input type="radio" name="palette">Hvid / blå</label></div><h2>Logo i midten</h2><div class="row wrap"><label class="checkbox"><input type="radio" name="logo-mode" checked>Initialer</label><label class="checkbox"><input type="radio" name="logo-mode">Billedliste</label><label class="checkbox"><input type="radio" name="logo-mode">Upload</label></div><label>Initialer<input maxlength="2" value="NP"></label><label>Billede<select><option>Ingen billeder</option></select></label></section>
+      <section class="stack"><h2>OBS</h2><div class="entry"><label>Bredde<input type="number" value="1920"></label><label>Højde<input type="number" value="1080"></label></div><label class="switch"><input type="checkbox">Start ved indlæsning</label><label class="switch"><input type="checkbox">Gentag automatisk</label><label class="switch"><input type="checkbox" checked>Vis resultat</label><button class="btn primary" type="button">Kopiér hjullink</button><button class="btn" type="button">Kopiér OBS-link</button></section>
+    </aside>
+    <div class="preview"><div class="wheel" role="img" aria-label="Rødt og hvidt spinnerhjul"><div class="winner"><span>En gave</span></div></div><button class="btn primary" type="button">Spin hjulet</button></div>
+  </main>
+  <footer class="footer muted">A project by NPetersen - <a href="https://github.com/NPetersenDK">NPetersenDK</a> - <a href="https://nipetersen.dk">nipetersen.dk</a> - <a href="https://twitch.tv/NPetersen">NPetersen</a> - <span>v1.0.0</span></footer>
+</body>
+</html>
