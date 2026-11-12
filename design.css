@@ -120,8 +120,8 @@ input.search { width: 220px; max-width: 100%; }
 .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 @media (max-width: 960px) { .grid4 { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .grid4 { grid-template-columns: 1fr; } }
-/* As many columns as fit. The app sets the column minimum in its own class:
-   .station-grid { --min: 280px; } */
+/* As many columns as fit. The app sets the column minimum in a class of its own,
+   for example --min: 280px on its tile grid. */
 .grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--min, 220px), 1fr)); gap: 14px; }
 .center-text { text-align: center; }
 .nowrap { white-space: nowrap; }

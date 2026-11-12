@@ -57,7 +57,7 @@ while IFS= read -r cssfile; do
     classes=$(echo "$sel" | grep -oE '\.[a-zA-Z_][a-zA-Z0-9_-]*' | sort -u)
     [ -z "$classes" ] && continue
     own=0
-    for c in $classes; do grep -qx "$c" "$tmp/design_classes" || own=1; done
+    for c in $classes; do grep -qxF -- "$c" "$tmp/design_classes" || own=1; done
     [ $own -eq 0 ] && echo "$cssfile:${line%%:*}: $sel"
   done
 done < "$tmp/css"
