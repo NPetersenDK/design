@@ -69,12 +69,20 @@ while IFS= read -r cssfile; do
   done
 done < "$tmp/css"
 
-section "classes nothing defines (typos, removed classes)"
+section "classes nothing defines (typos, removed classes; JS hooks listed apart)"
 cat "$tmp/css" | xargs cat 2>/dev/null | grep -oE '\.[a-zA-Z_][a-zA-Z0-9_-]*' | sed 's/^\.//' > "$tmp/app_classes"
 sed 's/^\.//' "$tmp/design_classes" >> "$tmp/app_classes"
 sort -u "$tmp/app_classes" -o "$tmp/app_classes"
+# Classes a script reaches for (querySelector, closest, matches, getElementsByClassName)
+# are hooks, not styling; they are reported on their own line.
+xargs grep -ohE '(querySelector(All)?|closest|matches|getElementsByClassName)\([^)]*\)' < "$tmp/src" 2>/dev/null \
+  | grep -oE '\.[a-zA-Z_][a-zA-Z0-9_-]*|getElementsByClassName\([^)]*' | sed -E 's/^\.//; s/getElementsByClassName\(["'"'"']//' | sort -u > "$tmp/hooks"
 xargs grep -ohE 'class(Name)?="[^"$`{]*"' < "$tmp/src" 2>/dev/null | sed -E 's/class(Name)?="//; s/"$//' | tr ' ' '\n' \
-  | grep -vE '^(fa|fa-|fab|far|fas|js-)|^$' | sort -u | while IFS= read -r c; do
-    grep -qx "$c" "$tmp/app_classes" || printf '%s ' "$c"
-  done
-echo
+  | grep -E '^[a-zA-Z_][a-zA-Z0-9_-]*$' | grep -vE '^(fa|fa-|fab|far|fas|js-)$|^fa-' | sort -u > "$tmp/used"
+undefined=""; hooks=""
+while IFS= read -r c; do
+  grep -qx "$c" "$tmp/app_classes" && continue
+  if grep -qx "$c" "$tmp/hooks"; then hooks="$hooks $c"; else undefined="$undefined $c"; fi
+done < "$tmp/used"
+echo "undefined:${undefined:- none}"
+echo "js hooks: ${hooks:- none}"
