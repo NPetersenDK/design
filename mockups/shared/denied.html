@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en" data-theme="gray">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="referrer" content="no-referrer">
+<title>No access - App</title>
+<link rel="stylesheet" href="../../design.css">
+<!-- Access denied: the login worked, the user has no role. Sample data below.
+     In an app this is a Go template; keep the app's own fields, for example:
+       <dl>
+         {{if .Username}}<dt>Username</dt><dd>{{.Username}}</dd>{{end}}
+         {{if .Name}}<dt>Name</dt><dd>{{.Name}}</dd>{{end}}
+         {{if .Email}}<dt>Email</dt><dd>{{.Email}}</dd>{{end}}
+         <dt>Subject</dt><dd>{{.Subject}}</dd>
+         <dt>Roles ({{.Claim}})</dt>
+         <dd>{{if .Values}}{{range $i, $v := .Values}}{{if $i}}, {{end}}{{$v}}{{end}}{{else}}<span class="muted">none</span>{{end}}</dd>
+       </dl>
+     and the links <a href="{{.LoginURL}}">Try again</a> {{if .LogoutURL}}<a href="{{.LogoutURL}}">Log out and switch account</a>{{end}}.
+     Danish apps: "Øv :( Du har ikke adgang til <app>." / "Giv nedenstående til den der driver tjenesten, for at få adgang:" /
+     Brugernavn, Navn, Roller, ingen / "Prøv igen", "Log helt ud og skift konto". -->
+</head>
+<body>
+  <div class="center">
+  <main class="card denied">
+    <h1>Ouch :( It looks like you don't have access right now.</h1>
+    <p class="muted">Provide the following to whoever gave you this link, to get access:</p>
+    <div class="log">
+    <dl>
+      <dt>Username</dt><dd>sam.example</dd>
+      <dt>Name</dt><dd>Sam Example</dd>
+      <dt>Email</dt><dd>sam@example.org</dd>
+      <dt>Subject</dt><dd>7a1f3c2e-0000-4000-8000-000000000000</dd>
+      <dt>Roles (groups)</dt>
+      <dd><span class="muted">none</span></dd>
+    </dl>
+    </div>
+    <div class="row wrap">
+      <a href="#">Try again</a>
+      <a href="#">Log out and switch account</a>
+    </div>
+  </main>
+  </div>
+</body>
+</html>

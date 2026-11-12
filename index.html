@@ -24,7 +24,7 @@
 
 <div class="g-bar">
   <div class="row wrap">
-    <strong>Design gallery</strong> <span class="muted small">design v1.5.0</span>
+    <strong>Design gallery</strong> <span class="muted small">design v1.6.0</span>
     <span class="spacer"></span>
     <span class="muted small">Theme</span>
     <button class="btn sm" data-theme-set="blue">blue</button>
@@ -67,6 +67,22 @@
   <div class="grid3" style="margin-top:8px"><div class="card">grid3 a</div><div class="card">grid3 b</div><div class="card">grid3 c</div></div>
   <div class="grid4" style="margin-top:8px"><div class="card">grid4 a</div><div class="card">grid4 b</div><div class="card">grid4 c</div><div class="card">grid4 d</div></div>
   <div class="g-frame" style="height:120px;margin-top:8px"><div class="center" style="min-height:100%">.center</div></div>
+  <div class="g-sub">Row modifiers: end, center, between, tight. stack.tight</div>
+  <div class="stack tight">
+    <div class="row end"><span class="badge muted">row end</span><button class="btn sm">Right</button></div>
+    <div class="row center"><span class="badge muted">row center</span><button class="btn sm">Middle</button></div>
+    <div class="row between"><span class="badge muted">row between</span><button class="btn sm">Far side</button></div>
+    <div class="row tight"><span class="badge muted">row tight</span><span class="badge muted">6px gap</span><span class="badge muted">between</span></div>
+  </div>
+  <div class="g-sub">grid-auto (the app sets --min in its own class), truncate, stale, hr, code</div>
+  <div class="grid-auto" style="--min:160px"><div class="card">auto a</div><div class="card">auto b</div><div class="card">auto c</div><div class="card">auto d</div><div class="card">auto e</div></div>
+  <div class="stack tight" style="margin-top:8px;max-width:360px">
+    <div class="truncate">truncate: a very long line of text that is cut with an ellipsis instead of wrapping onto the next line</div>
+    <div class="stale">stale: last known value, connection lost</div>
+    <hr>
+    <p>Inline <code>code</code> and <kbd>Ctrl</kbd> are small mono chips. Run <code>connect 10.0.0.5</code>.</p>
+    <p class="note">In a note a <code>$1</code> variable stays in the running text.</p>
+  </div>
 </section>
 
 <section class="g" id="buttons">
@@ -82,6 +98,20 @@
     <a class="btn" href="#buttons">a.btn</a>
     <a class="btn primary" href="#buttons">a.btn primary</a>
   </div>
+  <div class="g-sub">Toggle (on) and icon-only buttons</div>
+  <div class="row wrap">
+    <button class="btn on">48V on</button>
+    <button class="btn">48V off</button>
+    <button class="btn icon" title="Add"><i class="fa-solid fa-plus"></i></button>
+    <button class="btn icon" title="Remove"><i class="fa-solid fa-minus"></i></button>
+    <button class="btn sm icon" title="Zoom in"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+    <button class="btn sm icon" title="Zoom out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+  </div>
+  <div class="g-sub">Segmented (exclusive choices in one frame) and segmented sm</div>
+  <div class="row wrap">
+    <div class="segmented" data-segmented><button class="on">Callouts</button><button>Plain</button><button>Both</button></div>
+    <div class="segmented sm" data-segmented><button>1</button><button>2</button><button>3</button><button class="on">4</button><button>5</button><button>6</button><button>7</button><button>8</button><button>9</button><button>10</button></div>
+  </div>
   <div class="g-sub">Block</div>
   <div class="stack" style="max-width:360px">
     <a class="btn block" href="#buttons"><i class="fa-brands fa-discord"></i> Log in with Discord</a>
@@ -91,6 +121,22 @@
   <div class="row wrap">
     <button class="btn choice"><strong>Option one</strong><span class="choice-hint">Hint line for option one</span></button>
     <button class="btn choice"><strong>Option two</strong><span class="choice-hint">Hint line for option two</span></button>
+  </div>
+  <div class="g-sub">choice-grid: big choices with an icon, one of them on</div>
+  <div class="choice-grid">
+    <button class="btn choice on"><i class="fa-solid fa-trophy"></i><b>Tournament</b><span class="choice-hint">Bracket, seeding and servers</span></button>
+    <button class="btn choice"><i class="fa-solid fa-people-group"></i><b>Practice</b><span class="choice-hint">Teams and a shared server</span></button>
+    <a class="btn choice" href="#buttons"><i class="fa-solid fa-user-shield"></i><b>Trainers</b><span class="choice-hint">A link styled the same way</span></a>
+    <button class="btn choice" disabled><i class="fa-solid fa-lock"></i><b>Disabled</b><span class="choice-hint">Not available</span></button>
+  </div>
+  <div class="g-sub">choice-grid compact: many small ones (maps)</div>
+  <div class="choice-grid compact">
+    <button class="btn choice on"><b>Mirage</b><span class="muted">de_mirage</span></button>
+    <button class="btn choice"><b>Inferno</b><span class="muted">de_inferno</span></button>
+    <button class="btn choice"><b>Nuke</b><span class="muted">de_nuke</span></button>
+    <button class="btn choice"><b>Ancient</b><span class="muted">de_ancient</span></button>
+    <button class="btn choice"><b>Anubis</b><span class="muted">de_anubis</span></button>
+    <button class="btn choice"><b>Dust 2</b><span class="muted">de_dust2</span></button>
   </div>
   <div class="g-sub">Login and profile buttons</div>
   <div class="row wrap">
@@ -137,10 +183,31 @@
     <div class="stat"><div class="stat-value">7</div><div class="stat-label">Live</div></div>
     <div class="stat"><div class="stat-value">99.9%</div><div class="stat-label">Uptime</div></div>
   </div>
-  <div class="g-sub">stat sm</div>
+  <div class="g-sub">stat sm, and a value that is a status (stat-value ok / err)</div>
   <div class="row wrap statrow">
     <div class="stat sm"><div class="stat-value">42</div><div class="stat-label">Clients</div></div>
     <div class="stat sm"><div class="stat-value">-12 dB</div><div class="stat-label">Level</div></div>
+    <div class="stat sm"><div class="stat-value ok">+1.8</div><div class="stat-label">K/D</div></div>
+    <div class="stat sm"><div class="stat-value err">-240</div><div class="stat-label">Balance</div></div>
+  </div>
+  <div class="g-sub">item: selectable rows (pickers, search results). Click to select</div>
+  <div class="card" style="max-width:520px">
+    <ul class="list" data-items>
+      <li><button class="item on"><i class="fa-solid fa-calendar"></i><span class="grow truncate">Vinter LAN 2026</span><span class="muted small">14. feb</span></button></li>
+      <li><button class="item"><i class="fa-solid fa-calendar"></i><span class="grow truncate">Forårsturnering, en lang titel der bliver klippet</span><span class="muted small">21. mar</span></button></li>
+      <li><a class="item" href="#cards"><i class="fa-solid fa-radio"></i><span class="grow truncate">DR P3 (a link)</span><span class="badge ok">live</span></a></li>
+    </ul>
+    <div class="empty">empty: Ingen flere kalendere</div>
+  </div>
+  <div class="g-sub">progress (fill from the left) and meter (level, --lvl 0 to 100)</div>
+  <div class="card" style="max-width:520px">
+    <div class="kv"><span>Server start</span><span class="mono">62%</span></div>
+    <div class="progress"><div class="progress-fill" style="width:62%"></div></div>
+    <div class="kv"><span>Level L</span><span class="mono">-9 dB</span></div>
+    <div class="meter" style="--lvl:70"><div class="meter-cover"></div></div>
+    <div class="kv"><span>Level R</span><span class="mono">-24 dB</span></div>
+    <div class="meter" style="--lvl:40"><div class="meter-cover"></div></div>
+    <p class="note">The widths and levels are runtime values set by the app: the one place an inline style is right.</p>
   </div>
   <div class="g-sub">kv (one row) and dl.kv (two columns)</div>
   <div class="grid2">
@@ -162,9 +229,11 @@
     <span class="badge">badge</span><span class="badge ok">ok</span><span class="badge warn">warn</span>
     <span class="badge err">err</span><span class="badge info">info</span><span class="badge accent">accent (tag)</span><span class="badge muted">muted</span>
     <a class="badge" href="#status">a.badge (link)</a>
+    <button class="badge info"><i class="fa-brands fa-chromecast"></i> button.badge</button>
+    <span class="badge err live"><i class="fa-solid fa-circle"></i> badge live (recording)</span>
   </div>
   <div class="g-sub">Alerts</div>
-  <div class="stack" style="gap:8px">
+  <div class="stack tight">
     <div class="alert">Plain alert</div>
     <div class="alert ok">ok: saved successfully</div>
     <div class="alert warn">warn: check this first</div>
@@ -213,6 +282,13 @@
       </tbody>
     </table>
   </div>
+  <div class="g-sub">td.empty when the table has no rows</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Name</th><th>Status</th><th class="num">Score</th></tr></thead>
+      <tbody><tr><td class="empty" colspan="3">No servers yet</td></tr></tbody>
+    </table>
+  </div>
   <div class="g-sub">Sortable headers and expanding rows (static; live version in mockups/shared/tables.html)</div>
   <div class="table-wrap">
     <table class="table">
@@ -253,12 +329,20 @@
       <span hidden>hidden attribute: not shown</span>
     </div>
   </div>
-  <div class="g-sub">Tabs</div>
-  <div class="tabs" id="g-tabs">
-    <button class="tab on">Overview</button><button class="tab">Settings</button><button class="tab">Logs</button>
+  <div class="g-sub">Tabs (live via dsTabs: .tab[data-tab] shows [data-panel]) and a disabled tab</div>
+  <div id="g-tabs">
+    <div class="tabs">
+      <button class="tab on" data-tab="overview">Overview</button><button class="tab" data-tab="settings">Settings</button><button class="tab" data-tab="logs">Logs</button><button class="tab" disabled>Billing</button>
+    </div>
+    <div data-panel="overview"><p class="note">Overview panel.</p></div>
+    <div data-panel="settings" hidden><p class="note">Settings panel.</p></div>
+    <div data-panel="logs" hidden><p class="note">Logs panel.</p></div>
   </div>
-  <div class="g-sub">Chips</div>
+  <div class="g-sub">Chips, and chips.scroll (a long set in a scrolling box)</div>
   <div class="chips"><button class="chip">Default</button><button class="chip on">Selected (on)</button><button class="chip"><i class="fa-solid fa-user"></i> With icon</button></div>
+  <div class="chips scroll" style="max-width:360px;margin-top:8px">
+    <button class="chip">Alpha</button><button class="chip">Bravo</button><button class="chip">Charlie</button><button class="chip">Delta</button><button class="chip">Echo</button><button class="chip">Foxtrot</button><button class="chip">Golf</button><button class="chip">Hotel</button><button class="chip">India</button><button class="chip">Juliet</button><button class="chip">Kilo</button><button class="chip">Lima</button><button class="chip">Mike</button><button class="chip">November</button><button class="chip">Oscar</button><button class="chip">Papa</button><button class="chip">Quebec</button><button class="chip">Romeo</button><button class="chip">Sierra</button><button class="chip">Tango</button><button class="chip">Uniform</button><button class="chip">Victor</button><button class="chip">Whiskey</button><button class="chip">X-ray</button><button class="chip">Yankee</button><button class="chip">Zulu</button>
+  </div>
 </section>
 
 <section class="g" id="overlays">
@@ -276,12 +360,27 @@
         <div class="row"><span class="spacer"></span><button class="btn ghost">Cancel</button><button class="btn danger">Delete</button></div></div>
     </div>
   </div>
-  <div class="g-sub">dialog.modal (live)</div>
-  <button class="btn" id="open-dialog">Open dialog</button>
+  <div class="g-sub">dialog.modal (live), dialog.modal.lg, and dsConfirm instead of window.confirm</div>
+  <div class="row wrap">
+    <button class="btn" id="open-dialog">Open dialog</button>
+    <button class="btn" id="open-dialog-lg">Open dialog lg</button>
+    <button class="btn" id="confirm-plain">dsConfirm</button>
+    <button class="btn ghost danger" id="confirm-danger">dsConfirm danger</button>
+    <span class="muted small" id="confirm-out"></span>
+  </div>
   <dialog class="modal" id="g-dialog">
     <h2>Native dialog</h2>
     <p class="muted">dialog.modal with ::backdrop. Closed state is hidden.</p>
-    <form method="dialog" class="row"><span class="spacer"></span><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">OK</button></form>
+    <form method="dialog" class="row end"><button class="btn ghost" value="cancel">Cancel</button><button class="btn primary" value="ok">OK</button></form>
+  </dialog>
+  <dialog class="modal lg" id="g-dialog-lg">
+    <h2>Certificate details</h2>
+    <p class="muted">modal.lg: 760px, left-aligned, scrolls inside when the content is tall.</p>
+    <dl class="kv"><dt>Subject</dt><dd class="mono">CN=example.org</dd><dt>Issuer</dt><dd>Let's Encrypt</dd><dt>Not after</dt><dd>2027-02-01</dd></dl>
+    <pre class="log">-----BEGIN CERTIFICATE-----
+MIIBszCCAVmgAwIBAgIUQ4b6cQ... (sample)
+-----END CERTIFICATE-----</pre>
+    <form method="dialog" class="row end"><button class="btn primary" value="ok">Close</button></form>
   </dialog>
   <div class="g-sub">Dropdown</div>
   <div style="min-height:230px;display:flex;justify-content:flex-end">
@@ -310,7 +409,12 @@
           <button class="nav-dropdown-toggle">Games <i class="fa-solid fa-caret-down"></i></button>
         </nav>
         <span class="spacer"></span>
-        <a class="btn login-button" href="#sample">Log in</a>
+        <div class="toolbar end">
+          <input class="search" placeholder="Search" aria-label="Search">
+          <span class="badge ok"><i class="fa-solid fa-plug"></i> connected</span>
+          <a class="btn login-button" href="#sample">Log in</a>
+          <span class="badge muted">v1.2.0</span>
+        </div>
       </div>
       <div class="content stack">
         <div class="row wrap statrow">
@@ -338,7 +442,20 @@
           </div>
         </div>
       </div>
-      <div class="footer muted">Footer text</div>
+      <footer class="footer muted">A project by NPetersen - <a href="#sample"><i class="fa-brands fa-github"></i> NPetersenDK</a> - <a href="#sample">nipetersen.dk</a> - <a href="#sample"><i class="fa-brands fa-twitch"></i> NPetersen</a> - v1.2.0</footer>
+    </div>
+  </div>
+  <div class="g-sub">The eSportBrande footer (intranet)</div>
+  <div class="g-page"><footer class="footer muted"><i>Site created with <i class="fa-regular fa-heart"></i> by eSport Brande and Nikolaj Petersen (npetersen on Discord)<br>Code is available at: <a href="#sample">Github <i class="fa-brands fa-github"></i></a> (Now Open Source!)</i></footer></div>
+  <div class="g-sub">Access denied page (mockups/shared/denied.html)</div>
+  <div class="g-frame" style="height:420px">
+    <div class="center" style="min-height:100%">
+      <main class="card denied">
+        <h1>Ouch :( It looks like you don't have access right now.</h1>
+        <p class="muted">Provide the following to whoever gave you this link, to get access:</p>
+        <div class="log"><dl><dt>Username</dt><dd>sam.example</dd><dt>Subject</dt><dd>7a1f3c2e-0000-4000-8000-000000000000</dd><dt>Roles (groups)</dt><dd><span class="muted">none</span></dd></dl></div>
+        <div class="row wrap"><a href="#sample">Try again</a><a href="#sample">Log out and switch account</a></div>
+      </main>
     </div>
   </div>
 </section>
@@ -391,17 +508,36 @@
   });
   var dlg = document.getElementById("g-dialog");
   document.getElementById("open-dialog").addEventListener("click", function () { dlg.showModal(); });
+  var dlgLg = document.getElementById("g-dialog-lg");
+  document.getElementById("open-dialog-lg").addEventListener("click", function () { dlgLg.showModal(); });
+  var cout = document.getElementById("confirm-out");
+  document.getElementById("confirm-plain").addEventListener("click", function () {
+    dsConfirm("Restart the match? The score is reset.", { title: "Restart match", ok: "Restart" }).then(function (yes) { cout.textContent = yes ? "answered OK" : "answered Cancel"; });
+  });
+  document.getElementById("confirm-danger").addEventListener("click", function () {
+    dsConfirm("Delete the server \"lan-01\"?\nIts backups are kept.", { title: "Delete server", ok: "Delete", danger: true }).then(function (yes) { cout.textContent = yes ? "answered Delete" : "answered Cancel"; });
+  });
   document.getElementById("dd-btn").addEventListener("click", function () {
     document.getElementById("dd-menu").classList.toggle("hidden");
   });
-  document.querySelectorAll("#g-tabs .tab").forEach(function (t) {
-    t.addEventListener("click", function () {
-      document.querySelectorAll("#g-tabs .tab").forEach(function (x) { x.classList.remove("on"); });
-      t.classList.add("on");
-    });
-  });
+  dsTabs(document.getElementById("g-tabs"));
   document.querySelectorAll(".chips .chip").forEach(function (c) {
     c.addEventListener("click", function () { c.classList.toggle("on"); });
+  });
+  document.querySelectorAll("[data-segmented]").forEach(function (g) {
+    g.querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        g.querySelectorAll("button").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+      });
+    });
+  });
+  document.querySelectorAll("[data-items] .item").forEach(function (it) {
+    it.addEventListener("click", function (e) {
+      e.preventDefault();
+      document.querySelectorAll("[data-items] .item").forEach(function (x) { x.classList.remove("on"); });
+      it.classList.add("on");
+    });
   });
 })();
 </script>
