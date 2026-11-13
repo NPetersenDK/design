@@ -37,6 +37,7 @@ React apps copy the files they need from `react/` into `web/src/design/` the sam
 | `dsToast(message, kind)` | toast bottom right; kind is `ok`, `warn`, `err` or `info` |
 | `dsError(message, title)` | error popup (native dialog), Esc or OK closes it |
 | `dsConfirm(message, { title, ok, cancel, danger })` | question popup; resolves `true` for OK, `false` for Cancel or Esc. `danger: true` makes OK red and starts the focus on Cancel. Use it instead of `window.confirm` |
+| `dsPrompt(message, { title, ok, cancel, value, type, placeholder })` | one-input popup; resolves the text for OK, `null` for Cancel or Esc. Use it instead of `window.prompt` |
 | `dsTabs(root)` | tab switching: `.tab[data-tab="x"]` shows `[data-panel="x"]` and hides the other panels |
 | `dsRowClick(tbody, handler)` | row click for `tr.clickable`, ignores clicks on links, buttons and inputs |
 | `dsFieldError(el, message, where)` | inline error next to a field; empty message clears it |

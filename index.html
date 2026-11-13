@@ -366,6 +366,7 @@
     <button class="btn" id="open-dialog-lg">Open dialog lg</button>
     <button class="btn" id="confirm-plain">dsConfirm</button>
     <button class="btn ghost danger" id="confirm-danger">dsConfirm danger</button>
+    <button class="btn" id="prompt-plain">dsPrompt</button>
     <span class="muted small" id="confirm-out"></span>
   </div>
   <dialog class="modal" id="g-dialog">
@@ -516,6 +517,9 @@ MIIBszCCAVmgAwIBAgIUQ4b6cQ... (sample)
   });
   document.getElementById("confirm-danger").addEventListener("click", function () {
     dsConfirm("Delete the server \"lan-01\"?\nIts backups are kept.", { title: "Delete server", ok: "Delete", danger: true }).then(function (yes) { cout.textContent = yes ? "answered Delete" : "answered Cancel"; });
+  });
+  document.getElementById("prompt-plain").addEventListener("click", function () {
+    dsPrompt("Folder name", { title: "New folder", ok: "Create", placeholder: "maps" }).then(function (v) { cout.textContent = v === null ? "answered Cancel" : "answered: " + v; });
   });
   document.getElementById("dd-btn").addEventListener("click", function () {
     document.getElementById("dd-menu").classList.toggle("hidden");
