@@ -98,12 +98,12 @@ A badge that links somewhere is `<a class="badge">`, one that does something is 
 
 ## Topbar and footer
 
-Topbar: `.brand` (text or logo, no colour on the icon), `.nav`, `.spacer`, then status badges and buttons in a `.toolbar.end`, the version as `<span class="badge muted">v1.2.0</span>` last.
+Topbar: `.brand` (text or logo, no colour on the icon), `.nav`, `.spacer`, then status badges and buttons in a `.toolbar.end`. The version does not go in the topbar; it lives in the footer.
 
 Footer, `<footer class="footer muted">`:
 
-- NPetersen apps: `A project by NPetersen - <a><i class="fa-brands fa-github"></i> NPetersenDK</a> - <a>nipetersen.dk</a> - <a><i class="fa-brands fa-twitch"></i> NPetersen</a> - v1.2.0` (the version where the app has one).
-- eSportBrande apps (intranet): `Site created with <i class="fa-regular fa-heart"></i> by eSport Brande and Nikolaj Petersen (npetersen on Discord)` and the GitHub line.
+- NPetersen apps: `A project by NPetersen - <a><i class="fa-brands fa-github"></i> NPetersenDK</a> - <a>nipetersen.dk</a> - <a><i class="fa-brands fa-twitch"></i> NPetersen</a> - <span id="versionBadge">v1.2.0</span>` (the version always goes last in the footer, where the app has one).
+- eSportBrande apps (intranet): `Site created with <i class="fa-regular fa-heart"></i> by eSport Brande and Nikolaj Petersen (npetersen on Discord)` and the GitHub line, then the version as ` - <span id="versionBadge">v1.2.0</span>` last.
 
 ## Access denied page
 
