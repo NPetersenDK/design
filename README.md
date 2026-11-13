@@ -18,7 +18,7 @@ Copy `design.css` into the app and link it before the app's own CSS. Do not edit
 
 | App type | Install path | How |
 |---|---|---|
-| React (Vite) | `web/src/design.css` | `import "./design.css";` before `./styles.css` in `src/main.tsx` |
+| React (Vite) | `web/public/design.css` | `<link rel="stylesheet" href="/design.css">` in `web/index.html`, after Font Awesome and before Vite's own bundle. Vite copies `public/` into `dist/`, so the Go BFF serves the same file to the access denied page |
 | Go-served `web/` app | `web/design.css` (+ `web/design.js`) | `//go:embed web/design.css`, served at `/design.css` or `{{BASE}}/design.css`; `<link href="/design.css" rel="stylesheet">` before the app stylesheet, `<script src="/design.js">` before the app script |
 
 Install from a tag:
